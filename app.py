@@ -24,19 +24,16 @@ def callback():
     # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
-    app.logger.info("Signature: " + signature)
     # handle webhook body
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
-        app.logger.error("Invalid signature")
         abort(400)
     return 'OK'
 
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    app.logger.info("Handling message: " + event.message.text)
     message = TextSendMessage(text=event.message.text)
     line_bot_api.reply_message(event.reply_token, message)
 
