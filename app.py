@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, abort
 
 from linebot import (
@@ -11,9 +12,9 @@ from linebot.models import *
 app = Flask(__name__)
 
 # Channel Access Token
-line_bot_api = LineBotApi('CHANNEL_ACCESS_TOKEN')
+line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
 # Channel Secret
-handler = WebhookHandler('CHANNEL_SECRET')
+handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
