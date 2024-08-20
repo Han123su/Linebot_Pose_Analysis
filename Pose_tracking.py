@@ -47,7 +47,7 @@ pose_data = []
 
 # 抓取剛剛分割好的幀，並儲存到 frame_list 資料結構中
 path = os.path.join(base_path, 'FRAMES', '*.jpg')
-#result = os.path.join(base_path, 'output.mp4')
+result = os.path.join(base_path, 'output.mp4')
 frame_list = sorted(glob.glob(path), key=os.path.getmtime)
 
 print("frame count: ", len(frame_list))
@@ -56,8 +56,8 @@ fps = 30
 shape = cv2.imread(frame_list[0]).shape  # delete dimension 3
 size = (shape[1], shape[0])
 print("frame size: ", size)
-#fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-#out = cv2.VideoWriter(result, fourcc, fps, size)
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter(result, fourcc, fps, size)
 
 # 設定 MediaPipe
 mp_drawing = mp.solutions.drawing_utils
@@ -114,9 +114,9 @@ with mp_holistic.Holistic(
 
         cv2.imwrite(os.path.join(base_path, "FRAMES_MP", f"{count}.jpg"), frame)
         count += 1
-        #out.write(frame)
+        out.write(frame)
 
-#out.release()
+out.release()
 print("\nPose Tracking and Data Export Completed !!!")
 
 # 將數據直接轉為 XLSX
