@@ -1,4 +1,4 @@
-def process_video(video_path):
+def process(video_path):
     # 執行 Pose_tracking.py
     os.system(f"python Pose_tracking.py {video_path}")
 

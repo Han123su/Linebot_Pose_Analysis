@@ -1,5 +1,5 @@
 import os
-import process_video
+from process_video import process
 from flask import Flask, request, abort
 
 from linebot import (
@@ -51,7 +51,7 @@ def handle_video_message(event):
             fd.write(chunk)
     
     # 呼叫後端處理函式
-    result, images = process_video(video_path)
+    result, images = process(video_path)
 
     # # 回覆處理結果給使用者
     # reply_message = TextSendMessage(text="影片處理完成，請查看以下結果。")
