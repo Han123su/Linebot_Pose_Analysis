@@ -57,7 +57,7 @@ def handle_video_message(event):
 
     # # 回傳處理生成的圖片
     # image_messages = [ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in images]
-    # line_bot_api.reply_message(event.reply_token, image_messages)
+    line_bot_api.reply_message(event.reply_token, image_messages)
 
 
 
