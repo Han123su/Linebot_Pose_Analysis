@@ -2,13 +2,15 @@ import os
 from linebot.models import *
 
 def process(video_path):
-    # 執行 Pose_tracking.py
+
     os.system(f"python Pose_tracking.py {video_path}")
 
     # 檢查 Excel 檔案是否成功生成
     excel_file = "static/EachFrame.xlsx"
     if os.path.exists(excel_file):
-        print(text="成功生成xlsx檔!!")
+        print("成功生成xlsx檔!!")
+        # reply_message = TextSendMessage(text="成功生成xlsx檔!!")
+        # return "Processing Complete", [reply_message]
     else:
         print("生成xlsx檔失敗，請檢查處理過程。")
 
