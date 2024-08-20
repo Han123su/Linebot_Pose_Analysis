@@ -40,6 +40,7 @@ def handle_message(event):
 # 處理影片訊息
 @handler.add(MessageEvent, message=VideoMessage)
 def handle_video_message(event):
+    os.makedirs('static', exist_ok=True)
     message_content = line_bot_api.get_message_content(event.message.id)
     video_path = os.path.join("static", f"{event.message.id}.mp4")
     
@@ -57,7 +58,9 @@ def handle_video_message(event):
 
     # # 回傳處理生成的圖片
     # image_messages = [ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in images]
-    line_bot_api.reply_message(event.reply_token, image_messages)
+    # line_bot_api.reply_message(event.reply_token, image_messages)
+
+    line_bot_api.reply_message(event.reply_token, images)
 
 
 
