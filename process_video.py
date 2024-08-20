@@ -6,7 +6,7 @@ def process(video_path):
     os.system(f"python Pose_tracking.py {video_path}")
 
     # 檢查 Excel 檔案是否成功生成
-    excel_file = "EachFrame.xlsx"
+    excel_file = "static/EachFrame.xlsx"
     if os.path.exists(excel_file):
         # 如果檔案存在，回覆成功訊息
         reply_message = TextSendMessage(text="成功生成xlsx檔!!")
