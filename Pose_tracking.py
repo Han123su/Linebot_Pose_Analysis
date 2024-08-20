@@ -4,30 +4,32 @@ import numpy as np
 import os
 import glob
 import pandas as pd
+import sys
 
-# 設定路徑
-# PATH = "/data/2TSSD/Han212/skeleton/data/test12/"
-# video_file = "test12_25%.mp4"
-PATH = "/data/2TSSD/Han212/skeleton/data/1016/1.25KG/"
-video_file = "1.25KG.mp4"
-video_file_path = os.path.join(PATH, video_file)
+# 讀取命令行參數中的影片路徑
+if len(sys.argv) != 2:
+    print("Usage: python Pose_tracking.py <video_file_path>")
+    sys.exit(1)
+
+video_file_path = sys.argv[1]
 
 # 嘗試開啟影片
 vidcap = cv2.VideoCapture(video_file_path)
 if not vidcap.isOpened():
     print(f"Error: Could not open video file '{video_file_path}'.")
-    exit()
+    sys.exit(1)
 
 success, image = vidcap.read()
 count = 0
 
-# 使用 os.makedirs() 建立資料夾
-os.makedirs(os.path.join(PATH, 'FRAMES'), exist_ok=True)
-os.makedirs(os.path.join(PATH, 'FRAMES_MP'), exist_ok=True)
+# 設定路徑
+base_path = os.path.dirname(video_file_path)
+os.makedirs(os.path.join(base_path, 'FRAMES'), exist_ok=True)
+os.makedirs(os.path.join(base_path, 'FRAMES_MP'), exist_ok=True)
 
 # 將影片分割成幀，並存入指定文件夾
 while success:
-    cv2.imwrite(os.path.join(PATH, "FRAMES", f"{count}.jpg"), image)  # save frame as JPEG file      
+    cv2.imwrite(os.path.join(base_path, "FRAMES", f"{count}.jpg"), image)  # save frame as JPEG file      
     success, image = vidcap.read()
     print('Read a new frame: ', success)
     count += 1
@@ -44,8 +46,8 @@ index = [
 pose_data = []
 
 # 抓取剛剛分割好的幀，並儲存到 frame_list 資料結構中
-path = os.path.join(PATH, 'FRAMES', '*.jpg')
-result = os.path.join(PATH, 'output.mp4')
+path = os.path.join(base_path, 'FRAMES', '*.jpg')
+result = os.path.join(base_path, 'output.mp4')
 frame_list = sorted(glob.glob(path), key=os.path.getmtime)
 
 print("frame count: ", len(frame_list))
@@ -110,7 +112,7 @@ with mp_holistic.Holistic(
         percentage = int(current_frame * 30 / (total_frame_count + 1))
         print("\rProcess: [{}{}] {:06d} / {:06d}".format("#" * percentage, "." * (30 - 1 - percentage), current_frame, total_frame_count), end='')
 
-        cv2.imwrite(os.path.join(PATH, "FRAMES_MP", f"{count}.jpg"), frame)
+        cv2.imwrite(os.path.join(base_path, "FRAMES_MP", f"{count}.jpg"), frame)
         count += 1
         out.write(frame)
 
@@ -119,7 +121,7 @@ print("\nPose Tracking and Data Export Completed !!!")
 
 # 將數據直接轉為 XLSX
 df = pd.DataFrame(pose_data, columns=index)
-xlsx_file_path = os.path.join(PATH, 'EachFrame.xlsx')
+xlsx_file_path = os.path.join(base_path, 'EachFrame.xlsx')
 df.to_excel(xlsx_file_path, index=False, engine='openpyxl')
 
 print(f"Data has been exported to XLSX file '{xlsx_file_path}'.")
