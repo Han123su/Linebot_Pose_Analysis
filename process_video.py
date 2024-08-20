@@ -1,4 +1,5 @@
 import os
+from linebot.models import *
 
 def process(video_path):
     # 執行 Pose_tracking.py
