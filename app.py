@@ -31,13 +31,37 @@ def callback():
         abort(400)
     return 'OK'
 
-# 處理訊息
+# 處理文字訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     message = TextSendMessage(text="你是不是說: " + event.message.text)
     line_bot_api.reply_message(event.reply_token, message)
 
-import os
+# 處理影片訊息
+@handler.add(MessageEvent, message=VideoMessage)
+def handle_video_message(event):
+    message_content = line_bot_api.get_message_content(event.message.id)
+    video_path = os.path.join("static", f"{event.message.id}.mp4")
+    
+    # 將影片儲存到本地
+    with open(video_path, 'wb') as fd:
+        for chunk in message_content.iter_content():
+            fd.write(chunk)
+    
+    # 呼叫後端處理函式
+    result, images = process_video(video_path)
+
+    # # 回覆處理結果給使用者
+    # reply_message = TextSendMessage(text="影片處理完成，請查看以下結果。")
+    # line_bot_api.reply_message(event.reply_token, reply_message)
+
+    # # 回傳處理生成的圖片
+    # image_messages = [ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in images]
+    # line_bot_api.reply_message(event.reply_token, image_messages)
+
+
+
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
