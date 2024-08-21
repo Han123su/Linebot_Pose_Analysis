@@ -39,7 +39,7 @@ def process(video_path):
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
     phase_diff_text_file = "static/phase_diff_results.txt"
-    lift_ratio_text_file = "static/lift_ratio_result.txt"
+    lift_ratio_text_file = "static/lift_ratio_results.txt"
 
     phase_diff_text = ""
     lift_ratio_text = ""

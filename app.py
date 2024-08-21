@@ -57,13 +57,13 @@ def handle_video_message(event):
     # 準備回覆消息
     reply_messages = []
     if phase_diff_text:
-        reply_messages.append(TextSendMessage(text="[相位差]分析結果:\n" + phase_diff_text))
+        reply_messages.append(TextSendMessage(text="** [相位差]分析結果 **\n" + phase_diff_text))
 
     if phase_diff_images:
         reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in phase_diff_images])
 
     if lift_ratio_text:
-        reply_messages.append(TextSendMessage(text="[抬升高度比例]分析結果:\n" + lift_ratio_text))
+        reply_messages.append(TextSendMessage(text="** [抬升高度比例]分析結果 **\n" + lift_ratio_text))
 
     if lift_ratio_images:
         reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in lift_ratio_images])
