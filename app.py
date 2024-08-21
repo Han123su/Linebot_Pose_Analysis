@@ -54,22 +54,29 @@ def handle_video_message(event):
     # 呼叫後端處理函式
     result, phase_diff_images, lift_ratio_images, phase_diff_text, lift_ratio_text = process(video_path)
 
-    # 回覆處理結果給使用者
-    reply_messages = [TextSendMessage(text="影片處理完成，請查看以下結果。")]
-
+    # 準備回覆消息
+    reply_messages = []
     if phase_diff_text:
-        reply_messages.append(TextSendMessage(text="Phase_diff.py 結果:\n" + phase_diff_text))
+        reply_messages.append(TextSendMessage(text="[相位差]分析結果:\n" + phase_diff_text))
 
     if phase_diff_images:
         reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in phase_diff_images])
 
     if lift_ratio_text:
-        reply_messages.append(TextSendMessage(text="Lift_ratio.py 結果:\n" + lift_ratio_text))
+        reply_messages.append(TextSendMessage(text="[抬升高度比例]分析結果:\n" + lift_ratio_text))
 
     if lift_ratio_images:
         reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in lift_ratio_images])
-
-    line_bot_api.reply_message(event.reply_token, reply_messages)
+    
+    # 如果回覆消息數量超過 5 條，分批發送
+    while len(reply_messages) > 0:
+        chunk = reply_messages[:5]
+        try:
+            line_bot_api.reply_message(event.reply_token, chunk)
+        except LineBotApiError as e:
+            app.logger.error(f"LineBotApiError: {e}")
+        reply_messages = reply_messages[5:]
+    
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))

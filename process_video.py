@@ -6,7 +6,6 @@ from Lift_ratio_calculate import Lift_ratio
 
 def process(video_path):
 
-    #os.system(f"python Pose_tracking.py {video_path}")
     try:
         subprocess.run(['python', 'Pose_tracking.py', video_path], check=True)
     except subprocess.CalledProcessError as e:
