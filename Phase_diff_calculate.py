@@ -11,7 +11,7 @@ def Phase_diff(excel_file):
     os.makedirs(output_folder, exist_ok=True)
 
     # 創建結果文本文件
-    results_file_path = os.path.join(output_folder, 'phase_diff_results.txt')
+    results_file_path = os.path.join(os.path.dirname(excel_file), 'phase_diff_results.txt')
     with open(results_file_path, 'w') as results_file:
         results_file.write("Phase Difference Analysis Results\n")
         results_file.write("==============================\n\n")
