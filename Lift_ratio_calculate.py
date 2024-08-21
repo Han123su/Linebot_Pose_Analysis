@@ -45,25 +45,25 @@ def Lift_ratio(excel_file):
 
         results_file.write(f"Frame : {i}\n")
         results_file.write("============================\n\n")
-        results_file.write(f"Above Left Percentage: {above:f}\n")
-        results_file.write(f"Below Left Percentage: {below:f}\n")
+        results_file.write(f"高於左腳比例: {above:f}\n")
+        results_file.write(f"低於左腳比例: {below:f}\n")
 
         if above >= below:
             results_file.write(f"Difference: {above - below:f}\n")
             if above - below >= 0.6:
-                results_file.write("Leftside hurts seriously!\n")
+                results_file.write("左腳受傷嚴重!\n\n")
             elif above - below >= 0.2:
-                results_file.write("Leftside hurts!\n")
+                results_file.write("左腳受傷!\n\n")
             else:
-                results_file.write("Rightside is higher in more frames!\n")
+                results_file.write("右腳占比高一點! (但不明顯)\n\n")
         else:
             results_file.write(f"Difference: {below - above:f}\n")
             if below - above >= 0.6:
-                results_file.write("Rightside hurts seriously!\n")
+                results_file.write("右腳受傷嚴重!\n\n")
             elif below - above >= 0.2:
-                results_file.write("Rightside hurts!\n")
+                results_file.write("右腳受傷!\n\n")
             else:
-                results_file.write("Leftside is higher in more frames!\n")
+                results_file.write("左腳占比高一點! (但不明顯)\n\n")
 
         results_file.write("============================")
 
