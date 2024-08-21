@@ -13,7 +13,7 @@ def Phase_diff(excel_file):
     # 創建結果文本文件
     results_file_path = os.path.join(os.path.dirname(excel_file), 'phase_diff_results.txt')
     with open(results_file_path, 'w') as results_file:
-        results_file.write("============================\n\n")
+        results_file.write("============================\n")
 
         # 讀取 Excel 檔案
         df = pd.read_excel(excel_file)
@@ -72,7 +72,7 @@ def Phase_diff(excel_file):
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig(os.path.join(output_folder, 'Ly_time_series.png'))
+        #plt.savefig(os.path.join(output_folder, 'Ly_time_series.png'))
         plt.close()
 
         # 繪製原始與去趨勢後的時間信號圖
@@ -95,14 +95,15 @@ def Phase_diff(excel_file):
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig(os.path.join(output_folder, 'Ry_time_series.png'))
+        #plt.savefig(os.path.join(output_folder, 'Ry_time_series.png'))
         plt.close()
 
         # ---------------[FFT]---------------------
         df = pd.read_excel(new_data_file_path)
 
         N = len(df['Ly_detrend'])
-        results_file.write(f"frame : {N}\n\n")
+        results_file.write(f"frame : {N}\n")
+        results_file.write("============================\n\n")
 
         # 設置信號初始值及變數
         x = np.linspace(0, N/30, N)  # 每一點~=0.03s
@@ -140,11 +141,11 @@ def Phase_diff(excel_file):
         if Max_idxL != Max_idxR:
             results_file.write(f"LeftIndex : {Max_idxL}  {freq[Max_idxL]}   RightIndex : {Max_idxR}  {freq[Max_idxR]}\n")
         else:
-            results_file.write("(主要頻率成分相位差)\n")
+            results_file.write("(主要頻率成分相位差)\n\n")
             results_file.write(f"主要頻率 : {freq[Max_idxL]}\n強度 : {MaxL}\n")
-            results_file.write(f"主要頻率成分相位差 : {phase1[Max_idxL] - phase2[Max_idxL]}\n")
+            results_file.write(f"主要頻率成分相位差 : {phase1[Max_idxL] - phase2[Max_idxL]}\n\n")
 
-            results_file.write('----------------------------------------------\n')
+            results_file.write("============================\n\n")
 
             # 各頻率之相位差加總取平均
             difference = np.abs(phase2[0:N//2] - phase1[0:N//2])
@@ -163,9 +164,10 @@ def Phase_diff(excel_file):
                 half_sum += result_percent[i] * difference[i]
 
             half_average = half_sum / len(result_indices)
-            results_file.write("(整體頻率成分加權對應的相位差)\n")
+            results_file.write("(整體頻率成分加權相位差)\n\n")
             results_file.write(f"整體頻率相位差*相應百分比之加總 : {half_sum}\n")
-            results_file.write(f"總和之平均 : {half_average}\n")
+            results_file.write(f"總和之平均 : {half_average}\n\n")
+            results_file.write("============================")
 
         # 繪製FFT圖形
         plt.figure(figsize=(12, 8))
@@ -187,7 +189,7 @@ def Phase_diff(excel_file):
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig(os.path.join(output_folder, 'FFT_comparison.png'))
+        #plt.savefig(os.path.join(output_folder, 'FFT_comparison.png'))
         plt.close()
 
         plt.figure()

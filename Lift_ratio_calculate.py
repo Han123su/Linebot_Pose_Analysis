@@ -72,7 +72,7 @@ def Lift_ratio(excel_file):
         plt.plot(x, Rknee, color='b', marker='o', linewidth=2, markersize=2, label='R Knee')
         plt.title('Knee Original Data')
         plt.legend()
-        plt.savefig(os.path.join(output_folder, "Knee_Original_Data.png"))
+        #plt.savefig(os.path.join(output_folder, "Knee_Original_Data.png"))
         plt.close()
 
         plt.figure()
@@ -82,7 +82,7 @@ def Lift_ratio(excel_file):
         plt.plot(x, Rdiff2, color='b', linestyle='--', linewidth=2, markersize=2, label='R Shoulder to Heel')
         plt.title('Body/Knee to Heel Range')
         plt.legend()
-        plt.savefig(os.path.join(output_folder, "Body_KneeToHeel_Range.png"))
+        #plt.savefig(os.path.join(output_folder, "Body_KneeToHeel_Range.png"))
         plt.close()
 
         plt.figure()
@@ -90,7 +90,7 @@ def Lift_ratio(excel_file):
         plt.plot(x, Rper, color='b', marker='o', linewidth=2, markersize=2, label='R Percentage')
         plt.title('Percentage')
         plt.legend()
-        plt.savefig(os.path.join(output_folder, "Percentage.png"))
+        #plt.savefig(os.path.join(output_folder, "Percentage.png"))
         plt.close()
 
         plt.figure()
