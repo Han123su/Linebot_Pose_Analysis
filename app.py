@@ -67,7 +67,7 @@ def handle_video_message(event):
 
     if lift_ratio_images:
         reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in lift_ratio_images])
-    
+
     # 如果回覆消息數量超過 5 條，分批發送
     while len(reply_messages) > 0:
         chunk = reply_messages[:5]
@@ -75,9 +75,11 @@ def handle_video_message(event):
             line_bot_api.reply_message(event.reply_token, chunk)
         except LineBotApiError as e:
             app.logger.error(f"LineBotApiError: {e}")
+            # 確保在處理錯誤時不會重複發送
+            break
         reply_messages = reply_messages[5:]
     
-
+    
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
