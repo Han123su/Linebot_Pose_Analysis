@@ -1,11 +1,16 @@
 import os
+import subprocess
 from linebot.models import *
 from Phase_diff_calculate import Phase_diff
 from Lift_ratio_calculate import Lift_ratio
 
 def process(video_path):
 
-    os.system(f"python Pose_tracking.py {video_path}")
+    #os.system(f"python Pose_tracking.py {video_path}")
+    try:
+        subprocess.run(['python', 'Pose_tracking.py', video_path], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
 
     # 檢查 Excel 檔案是否成功生成
     excel_file = "static/EachFrame.xlsx"
@@ -21,10 +26,10 @@ def process(video_path):
     Lift_ratio(excel_file)
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的圖片
-    phase_diff_image_folder = os.path.join("image")
+    phase_diff_image_folder = os.path.join('static', 'image')
     phase_diff_images = [os.path.join(phase_diff_image_folder, img) for img in os.listdir(phase_diff_image_folder)]
     
-    lift_ratio_image_folder = os.path.join("image2")
+    lift_ratio_image_folder = os.path.join('static', 'image2')
     lift_ratio_images = [os.path.join(lift_ratio_image_folder, img) for img in os.listdir(lift_ratio_image_folder)]
 
     # 假設圖片可以從伺服器的 URL 存取
