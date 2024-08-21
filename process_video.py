@@ -1,5 +1,7 @@
 import os
 from linebot.models import *
+from Phase_diff_calculate import Phase_diff
+from Lift_ratio_calculate import Lift_ratio
 
 def process(video_path):
 
@@ -14,20 +16,42 @@ def process(video_path):
     else:
         print("生成xlsx檔失敗，請檢查處理過程。")
 
-    # # 執行 Phase_diff.py 和 Lift_ratio.py
-    # os.system("python Phase_diff.py")
-    # os.system("python Lift_ratio.py")
+    # 呼叫 Phase_diff 和 Lift_ratio 函數
+    Phase_diff(excel_file)
+    Lift_ratio(excel_file)
 
-    # # 讀取生成的圖片
-    # image_folder = "image"
-    # image2_folder = "image2"
-    # image_files = [os.path.join(image_folder, img) for img in os.listdir(image_folder)]
-    # image2_files = [os.path.join(image2_folder, img) for img in os.listdir(image2_folder)]
+    # 讀取 Phase_diff 和 Lift_ratio 生成的圖片
+    phase_diff_image_folder = os.path.join("image")
+    phase_diff_images = [os.path.join(phase_diff_image_folder, img) for img in os.listdir(phase_diff_image_folder)]
+    
+    lift_ratio_image_folder = os.path.join("image2")
+    lift_ratio_images = [os.path.join(lift_ratio_image_folder, img) for img in os.listdir(lift_ratio_image_folder)]
 
-    # # 假設圖片可以從伺服器的 URL 存取
-    # # 這裡需要提供你的圖片儲存伺服器的 URL 根路徑
-    # base_url = "https://your-server-url.com/"
-    # images = [base_url + img for img in image_files + image2_files]
+    # 假設圖片可以從伺服器的 URL 存取
+    base_url = os.getenv('BASE_URL', 'https://your-server-url.com/')
+    
+    phase_diff_images_urls = [base_url + img for img in phase_diff_images]
+    lift_ratio_images_urls = [base_url + img for img in lift_ratio_images]
 
-    # return "Processing Complete", images
+    # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
+    phase_diff_text_file = "static/phase_diff_results.txt"
+    lift_ratio_text_file = "static/lift_ratio_result.txt"
 
+    phase_diff_text = ""
+    lift_ratio_text = ""
+
+    try:
+        with open(phase_diff_text_file, 'r') as file:
+            phase_diff_text = file.read()
+    except IOError as e:
+        print(f"讀取 {phase_diff_text_file} 失敗: {e}")
+        phase_diff_text = "讀取 Phase_diff 結果失敗。"
+
+    try:
+        with open(lift_ratio_text_file, 'r') as file:
+            lift_ratio_text = file.read()
+    except IOError as e:
+        print(f"讀取 {lift_ratio_text_file} 失敗: {e}")
+        lift_ratio_text = "讀取 Lift_ratio 結果失敗。"
+
+    return "Processing Complete", phase_diff_images_urls, lift_ratio_images_urls, phase_diff_text, lift_ratio_text

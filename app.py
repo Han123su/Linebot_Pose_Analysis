@@ -17,6 +17,7 @@ line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
 # Channel Secret
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 
+
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -51,20 +52,24 @@ def handle_video_message(event):
             fd.write(chunk)
     
     # 呼叫後端處理函式
-    result, images = process(video_path)
+    result, phase_diff_images, lift_ratio_images, phase_diff_text, lift_ratio_text = process(video_path)
 
-    # # 回覆處理結果給使用者
-    # reply_message = TextSendMessage(text="影片處理完成，請查看以下結果。")
-    # line_bot_api.reply_message(event.reply_token, reply_message)
+    # 回覆處理結果給使用者
+    reply_messages = [TextSendMessage(text="影片處理完成，請查看以下結果。")]
 
-    # # 回傳處理生成的圖片
-    # image_messages = [ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in images]
-    # line_bot_api.reply_message(event.reply_token, image_messages)
+    if phase_diff_text:
+        reply_messages.append(TextSendMessage(text="Phase_diff.py 結果:\n" + phase_diff_text))
 
-    line_bot_api.reply_message(event.reply_token, images)
+    if phase_diff_images:
+        reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in phase_diff_images])
 
+    if lift_ratio_text:
+        reply_messages.append(TextSendMessage(text="Lift_ratio.py 結果:\n" + lift_ratio_text))
 
+    if lift_ratio_images:
+        reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in lift_ratio_images])
 
+    line_bot_api.reply_message(event.reply_token, reply_messages)
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
