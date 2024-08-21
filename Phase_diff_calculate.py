@@ -102,7 +102,7 @@ def Phase_diff(excel_file):
         df = pd.read_excel(new_data_file_path)
 
         N = len(df['Ly_detrend'])
-        results_file.write(f"frame : {N}\n")
+        results_file.write(f"Frame : {N}\n")
         results_file.write("============================\n\n")
 
         # 設置信號初始值及變數

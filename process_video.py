@@ -32,10 +32,10 @@ def process(video_path):
     lift_ratio_images = [os.path.join(lift_ratio_image_folder, img) for img in os.listdir(lift_ratio_image_folder)]
 
     # 假設圖片可以從伺服器的 URL 存取
-    base_url = os.getenv('BASE_URL', 'https://your-server-url.com/')
+    base_url = os.getenv('BASE_URL', 'http://localhost:5000/static/')  # 確保這裡的 BASE_URL 指向你的靜態文件夾
     
-    phase_diff_images_urls = [base_url + img for img in phase_diff_images]
-    lift_ratio_images_urls = [base_url + img for img in lift_ratio_images]
+    phase_diff_images_urls = [base_url + os.path.basename(img) for img in phase_diff_images]
+    lift_ratio_images_urls = [base_url + os.path.basename(img) for img in lift_ratio_images]
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
     phase_diff_text_file = "static/phase_diff_results.txt"
@@ -59,3 +59,14 @@ def process(video_path):
         lift_ratio_text = "讀取 Lift_ratio 結果失敗。"
 
     return "Processing Complete", phase_diff_images_urls, lift_ratio_images_urls, phase_diff_text, lift_ratio_text
+
+
+# 清理 static 資料夾中的舊檔案
+def clear_static_folder():
+    for filename in os.listdir('static'):
+        file_path = os.path.join('static', filename)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            app.logger.error(f"Failed to delete {file_path}. Reason: {e}")

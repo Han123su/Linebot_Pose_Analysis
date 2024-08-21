@@ -1,5 +1,5 @@
 import os
-from process_video import process
+from process_video import process, clear_static_folder
 from flask import Flask, request, abort
 
 from linebot import (
@@ -42,6 +42,7 @@ def handle_message(event):
 # 處理影片訊息
 @handler.add(MessageEvent, message=VideoMessage)
 def handle_video_message(event):
+    clear_static_folder()  
     os.makedirs('static', exist_ok=True)
     message_content = line_bot_api.get_message_content(event.message.id)
     video_path = os.path.join("static", f"{event.message.id}.mp4")
