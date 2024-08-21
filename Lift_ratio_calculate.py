@@ -11,8 +11,7 @@ def Lift_ratio(excel_file):
     # 創建結果文本文件
     results_file_path = os.path.join(os.path.dirname(excel_file), 'lift_ratio_results.txt')
     with open(results_file_path, 'w') as results_file:
-        results_file.write("Lift Ratio Analysis Results\n")
-        results_file.write("============================\n\n")
+        results_file.write("============================\n")
 
         # 讀取 Excel 檔案
         df = pd.read_excel(excel_file, engine='openpyxl')
@@ -44,7 +43,8 @@ def Lift_ratio(excel_file):
         above = j / i
         below = 1 - above
 
-        results_file.write(f"Frame Number: {i}\n")
+        results_file.write(f"Frame : {i}\n")
+        results_file.write("============================\n\n")
         results_file.write(f"Above Left Percentage: {above:f}\n")
         results_file.write(f"Below Left Percentage: {below:f}\n")
 
@@ -64,6 +64,8 @@ def Lift_ratio(excel_file):
                 results_file.write("Rightside hurts!\n")
             else:
                 results_file.write("Leftside is higher in more frames!\n")
+
+        results_file.write("============================")
 
         # 繪製圖表
         plt.figure()
