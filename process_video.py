@@ -63,10 +63,14 @@ def process(video_path):
 
 # 清理 static 資料夾中的舊檔案
 def clear_static_folder():
-    for filename in os.listdir('static'):
-        file_path = os.path.join('static', filename)
-        try:
-            if os.path.isfile(file_path):
+    static_folder = 'static'
+    if not os.path.exists(static_folder):
+        return  # 如果資料夾不存在，直接返回
+    
+    for filename in os.listdir(static_folder):
+        file_path = os.path.join(static_folder, filename)
+        if os.path.isfile(file_path):
+            try:
                 os.remove(file_path)
-        except Exception as e:
-            app.logger.error(f"Failed to delete {file_path}. Reason: {e}")
+            except Exception as e:
+                app.logger.error(f"Failed to delete {file_path}. Reason: {e}")
