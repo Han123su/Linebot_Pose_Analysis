@@ -24,7 +24,20 @@ def process(video_path):
     # 呼叫 Phase_diff 和 Lift_ratio 函數
     Phase_diff(excel_file)
     Lift_ratio(excel_file)
+
+    # # 讀取 Phase_diff 和 Lift_ratio 生成的圖片
+    # phase_diff_image_folder = os.path.join('static', 'image')
+    # phase_diff_images = [os.path.join(phase_diff_image_folder, img) for img in os.listdir(phase_diff_image_folder)]
     
+    # lift_ratio_image_folder = os.path.join('static', 'image2')
+    # lift_ratio_images = [os.path.join(lift_ratio_image_folder, img) for img in os.listdir(lift_ratio_image_folder)]
+
+    # # 假設圖片可以從伺服器的 URL 存取
+    # base_url = os.getenv('BASE_URL', 'https://your-server-url.com/')
+    
+    # phase_diff_images_urls = [base_url + img for img in phase_diff_images]
+    # lift_ratio_images_urls = [base_url + img for img in lift_ratio_images]
+
     phase_diff_image_folder = os.path.join('static', 'image')
     lift_ratio_image_folder = os.path.join('static', 'image2')
 
@@ -55,8 +68,7 @@ def process(video_path):
     return "Processing Complete", phase_diff_images_urls, lift_ratio_images_urls, phase_diff_text, lift_ratio_text
 
 
-# 清理 static 資料夾中的舊檔案
-def clear_static_folder():
+def clear_static_folder():  # 清理 static 資料夾中的舊檔案
     static_folder = 'static'
     if not os.path.exists(static_folder):
         return  # 如果資料夾不存在，直接返回
