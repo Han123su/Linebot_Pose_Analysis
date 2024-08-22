@@ -1,6 +1,6 @@
 import os
 import subprocess
-from flask import url_for 
+from flask import Flask, url_for 
 from linebot.models import *
 from Phase_diff_calculate import Phase_diff
 from Lift_ratio_calculate import Lift_ratio
@@ -83,4 +83,3 @@ def clear_static_folder():  # 清理 static 資料夾中的舊檔案
                 app.logger.info(f"Deleted {file_path}")
             except Exception as e:
                 app.logger.error(f"Failed to delete {file_path}. Reason: {e}") 
-                
