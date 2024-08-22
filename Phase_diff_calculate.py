@@ -72,7 +72,7 @@ def Phase_diff(excel_file):
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig(os.path.join(output_folder, 'Ry/Ly_time_series.png'))
+        plt.savefig(os.path.join(output_folder, 'Ry_Ly_time_series.png'))
         plt.close()
 
 
