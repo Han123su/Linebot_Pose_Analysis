@@ -63,40 +63,64 @@ def Phase_diff(excel_file):
         plt.ylabel('Amplitude')
         plt.legend()
 
-        # 去趨勢後的 Ly 信號
-        plt.subplot(2, 1, 2)
-        plt.plot(df['Ly_detrend'], label='Detrended Ly', color='orange')
-        plt.title('Detrended Ly Time Series')
-        plt.xlabel('Sample Index')
-        plt.ylabel('Amplitude')
-        plt.legend()
-
-        plt.tight_layout()
-        #plt.savefig(os.path.join(output_folder, 'Ly_time_series.png'))
-        plt.close()
-
-        # 繪製原始與去趨勢後的時間信號圖
-        plt.figure(figsize=(10, 6))
-
         # 原始 Ry 信號
-        plt.subplot(2, 1, 1)
+        plt.subplot(2, 1, 2)
         plt.plot(df['R_Heel_30'], label='Original Ry', color='orange')
         plt.title('Original Ry Time Series')
         plt.xlabel('Sample Index')
         plt.ylabel('Amplitude')
         plt.legend()
 
-        # 去趨勢後的 Ry 信號
-        plt.subplot(2, 1, 2)
-        plt.plot(df['Ry_detrend'], label='Detrended Ry', color='blue')
-        plt.title('Detrended Ry Time Series')
-        plt.xlabel('Sample Index')
-        plt.ylabel('Amplitude')
-        plt.legend()
-
         plt.tight_layout()
-        #plt.savefig(os.path.join(output_folder, 'Ry_time_series.png'))
+        plt.savefig(os.path.join(output_folder, 'Ry/Ly_time_series.png'))
         plt.close()
+
+
+        # plt.figure(figsize=(10, 6))
+
+        # # 原始 Ly 信號
+        # plt.subplot(2, 1, 1)
+        # plt.plot(df['L_Heel_29'], label='Original Ly')
+        # plt.title('Original Ly Time Series')
+        # plt.xlabel('Sample Index')
+        # plt.ylabel('Amplitude')
+        # plt.legend()
+
+        # # 去趨勢後的 Ly 信號
+        # plt.subplot(2, 1, 2)
+        # plt.plot(df['Ly_detrend'], label='Detrended Ly', color='orange')
+        # plt.title('Detrended Ly Time Series')
+        # plt.xlabel('Sample Index')
+        # plt.ylabel('Amplitude')
+        # plt.legend()
+
+        # plt.tight_layout()
+        # plt.savefig(os.path.join(output_folder, 'Ly_time_series.png'))
+        # plt.close()
+
+
+        # plt.figure(figsize=(10, 6))
+
+        # # 原始 Ry 信號
+        # plt.subplot(2, 1, 2)
+        # # plt.subplot(2, 1, 1)
+        # plt.plot(df['R_Heel_30'], label='Original Ry', color='orange')
+        # plt.title('Original Ry Time Series')
+        # plt.xlabel('Sample Index')
+        # plt.ylabel('Amplitude')
+        # plt.legend()
+
+        # # 去趨勢後的 Ry 信號
+        # plt.subplot(2, 1, 2)
+        # plt.plot(df['Ry_detrend'], label='Detrended Ry', color='blue')
+        # plt.title('Detrended Ry Time Series')
+        # plt.xlabel('Sample Index')
+        # plt.ylabel('Amplitude')
+        # plt.legend()
+
+        # plt.tight_layout()
+        # plt.savefig(os.path.join(output_folder, 'Ry_time_series.png'))
+        # plt.close()
 
         # ---------------[FFT]---------------------
         df = pd.read_excel(new_data_file_path)
