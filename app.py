@@ -41,8 +41,7 @@ def handle_message(event):
 
 # 處理影片訊息
 @handler.add(MessageEvent, message=VideoMessage)
-def handle_video_message(event):
-    clear_static_folder()  
+def handle_video_message(event): 
     os.makedirs('static', exist_ok=True)
     message_content = line_bot_api.get_message_content(event.message.id)
     video_path = os.path.join("static", f"{event.message.id}.mp4")
@@ -79,6 +78,9 @@ def handle_video_message(event):
             # 確保在處理錯誤時不會重複發送
             break
         reply_messages = reply_messages[5:]
+
+    # 清理 static 文件夹中的旧文件
+    clear_static_folder()
     
     
 if __name__ == "__main__":
