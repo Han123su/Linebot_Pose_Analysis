@@ -83,3 +83,4 @@ def clear_static_folder():  # 清理 static 資料夾中的舊檔案
                 app.logger.info(f"Deleted {file_path}")
             except Exception as e:
                 app.logger.error(f"Failed to delete {file_path}. Reason: {e}") 
+                
