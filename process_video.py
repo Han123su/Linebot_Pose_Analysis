@@ -5,6 +5,8 @@ from linebot.models import *
 from Phase_diff_calculate import Phase_diff
 from Lift_ratio_calculate import Lift_ratio
 
+app = Flask(__name__)
+
 def process(video_path):
 
     try:
