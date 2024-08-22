@@ -1,5 +1,6 @@
 import os
 import subprocess
+from flask import url_for 
 from linebot.models import *
 from Phase_diff_calculate import Phase_diff
 from Lift_ratio_calculate import Lift_ratio
