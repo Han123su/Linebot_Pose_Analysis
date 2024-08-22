@@ -70,10 +70,10 @@ def process(video_path):
     return "Processing Complete", phase_diff_images_urls, lift_ratio_images_urls, phase_diff_text, lift_ratio_text
 
 
-def clear_static_folder():  # 清理 static 資料夾中的舊檔案
+def clear_static_folder():
     static_folder = 'static'
     if not os.path.exists(static_folder):
-        return  # 如果資料夾不存在，直接返回
+        return
     
     for filename in os.listdir(static_folder):
         file_path = os.path.join(static_folder, filename)
@@ -82,4 +82,7 @@ def clear_static_folder():  # 清理 static 資料夾中的舊檔案
                 os.remove(file_path)
                 app.logger.info(f"Deleted {file_path}")
             except Exception as e:
-                app.logger.error(f"Failed to delete {file_path}. Reason: {e}") 
+                app.logger.error(f"Failed to delete {file_path}. Reason: {e}")
+    
+    # 强制刷新文件系统缓存
+    os.sync()
