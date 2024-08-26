@@ -4,15 +4,18 @@ from flask import Flask, url_for
 from linebot.models import *
 from Phase_diff_calculate import Phase_diff
 from Lift_ratio_calculate import Lift_ratio
+from Pose_tracking import pose_detect
 
 app = Flask(__name__)
 
 def process(video_path):
 
-    try:
-        subprocess.run(['python', 'Pose_tracking.py', video_path], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error occurred: {e}")
+    # try:
+    #     subprocess.run(['python', 'Pose_tracking.py', video_path], check=True)
+    # except subprocess.CalledProcessError as e:
+    #     print(f"Error occurred: {e}")
+
+    pose_detect(video_path)
 
     # 檢查 Excel 檔案是否成功生成
     excel_file = "static/EachFrame.xlsx"
