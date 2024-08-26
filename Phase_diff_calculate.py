@@ -225,3 +225,5 @@ def Phase_diff(excel_file):
         plt.tight_layout()
         plt.savefig(os.path.join(output_folder, 'phase_difference.png'))  
         plt.close()
+
+        N=0

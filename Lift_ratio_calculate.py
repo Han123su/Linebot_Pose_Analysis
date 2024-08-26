@@ -102,3 +102,5 @@ def Lift_ratio(excel_file):
         plt.legend()
         plt.savefig(os.path.join(output_folder, "Minus_Trend.png"))
         plt.close()
+
+        i=0
