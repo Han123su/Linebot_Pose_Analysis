@@ -1,5 +1,6 @@
 import os
 import shutil 
+from datetime import datetime
 from flask import Flask, url_for 
 from linebot.models import *
 from Phase_diff_calculate import Phase_diff
@@ -30,24 +31,22 @@ def process(video_path):
     Phase_diff(excel_file)
     Lift_ratio(excel_file)
 
-    # # 讀取 Phase_diff 和 Lift_ratio 生成的圖片
-    # phase_diff_image_folder = os.path.join('static', 'image')
-    # phase_diff_images = [os.path.join(phase_diff_image_folder, img) for img in os.listdir(phase_diff_image_folder)]
-    
-    # lift_ratio_image_folder = os.path.join('static', 'image2')
-    # lift_ratio_images = [os.path.join(lift_ratio_image_folder, img) for img in os.listdir(lift_ratio_image_folder)]
-
-    # # 假設圖片可以從伺服器的 URL 存取
-    # base_url = os.getenv('BASE_URL', 'https://your-server-url.com/')
-    
-    # phase_diff_images_urls = [base_url + img for img in phase_diff_images]
-    # lift_ratio_images_urls = [base_url + img for img in lift_ratio_images]
-
     phase_diff_image_folder = os.path.join('static', 'image')
     lift_ratio_image_folder = os.path.join('static', 'image2')
 
-    phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
-    lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
+    # phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
+    # lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
+
+    timestamp = datetime.now().timestamp()  # 取得當前時間戳
+
+    phase_diff_images_urls = [
+        url_for('static', filename=f'image/{img}', _external=True) + f"?v={timestamp}" 
+        for img in os.listdir(phase_diff_image_folder)
+    ]
+    lift_ratio_images_urls = [
+        url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}"
+        for img in os.listdir(lift_ratio_image_folder)
+    ]
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
     phase_diff_text_file = "static/phase_diff_results.txt"
@@ -96,5 +95,5 @@ def clear_static_folder():
                 app.logger.error(f"Failed to delete directory {file_path}. Reason: {e}")
     
     # 强制刷新文件系统缓存
-    os.sync()
+    #os.sync()
 
