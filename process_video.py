@@ -64,7 +64,7 @@ def process(video_path):
         print(f"讀取 {lift_ratio_text_file} 失敗: {e}")
         lift_ratio_text = "讀取 Lift_ratio 結果失敗。"
 
-    return "Processing Complete", phase_diff_images_urls, lift_ratio_images_urls, phase_diff_text, lift_ratio_text
+    return phase_diff_images_urls, lift_ratio_images_urls, phase_diff_text, lift_ratio_text
 
 
 def clear_static_folder():

@@ -52,7 +52,7 @@ def handle_video_message(event):
             fd.write(chunk)
     
     # 呼叫後端處理函式
-    result, phase_diff_images, lift_ratio_images, phase_diff_text, lift_ratio_text = process(video_path)
+    phase_diff_images, lift_ratio_images, phase_diff_text, lift_ratio_text = process(video_path)
 
     # 準備回覆消息
     reply_messages = []
