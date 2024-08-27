@@ -16,13 +16,21 @@ def Lift_ratio(excel_file):
         # 讀取 Excel 檔案
         df = pd.read_excel(excel_file, engine='openpyxl')
 
-        # 計算每個特徵的值
-        Lknee = 450 - df['L_Knee_25'].dropna().values
-        Rknee = 450 - df['R_Knee_26'].dropna().values
-        Lheel = 450 - df['L_Heel_29'].dropna().values
-        Rheel = 450 - df['R_Heel_30'].dropna().values
-        Ls = 450 - df['L_Shoulder_11'].dropna().values
-        Rs = 450 - df['R_Shoulder_12'].dropna().values
+        # 計算每個特徵的值(正)
+        # Lknee = 450 - df['L_Knee_25'].dropna().values
+        # Rknee = 450 - df['R_Knee_26'].dropna().values
+        # Lheel = 450 - df['L_Heel_29'].dropna().values
+        # Rheel = 450 - df['R_Heel_30'].dropna().values
+        # Ls = 450 - df['L_Shoulder_11'].dropna().values
+        # Rs = 450 - df['R_Shoulder_12'].dropna().values
+
+        # 計算每個特徵的值(背)
+        Lknee = df['L_Knee_25'].dropna().values
+        Rknee = df['R_Knee_26'].dropna().values
+        Lheel = df['L_Heel_29'].dropna().values
+        Rheel = df['R_Heel_30'].dropna().values
+        Ls = df['L_Shoulder_11'].dropna().values
+        Rs = df['R_Shoulder_12'].dropna().values
 
         # 計算差異和比率
         Ldiff1 = Lknee - Lheel
