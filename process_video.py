@@ -1,6 +1,6 @@
 import os
 import shutil 
-from datetime import datetime
+#from datetime import datetime
 from flask import Flask, url_for 
 from linebot.models import *
 from Phase_diff_calculate import Phase_diff
@@ -10,11 +10,6 @@ from Pose_tracking import pose_detect
 app = Flask(__name__)
 
 def process(video_path):
-
-    # try:
-    #     subprocess.run(['python', 'Pose_tracking.py', video_path], check=True)
-    # except subprocess.CalledProcessError as e:
-    #     print(f"Error occurred: {e}")
 
     pose_detect(video_path)
 
@@ -34,19 +29,19 @@ def process(video_path):
     phase_diff_image_folder = os.path.join('static', 'image')
     lift_ratio_image_folder = os.path.join('static', 'image2')
 
-    # phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
-    # lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
+    phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
+    lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
 
-    timestamp = datetime.now().timestamp()  # 取得當前時間戳
+    # timestamp = datetime.now().timestamp()  # 取得當前時間戳
 
-    phase_diff_images_urls = [
-        url_for('static', filename=f'image/{img}', _external=True) + f"?v={timestamp}" 
-        for img in os.listdir(phase_diff_image_folder)
-    ]
-    lift_ratio_images_urls = [
-        url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}"
-        for img in os.listdir(lift_ratio_image_folder)
-    ]
+    # phase_diff_images_urls = [
+    #     url_for('static', filename=f'image/{img}', _external=True) + f"?v={timestamp}" 
+    #     for img in os.listdir(phase_diff_image_folder)
+    # ]
+    # lift_ratio_images_urls = [
+    #     url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}"
+    #     for img in os.listdir(lift_ratio_image_folder)
+    # ]
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
     phase_diff_text_file = "static/phase_diff_results.txt"
@@ -94,6 +89,16 @@ def clear_static_folder():
             except Exception as e:
                 app.logger.error(f"Failed to delete directory {file_path}. Reason: {e}")
     
+    # 確保 `static/image` 和 `static/image2` 資料夾中的內容也被刪除
+    for subfolder in ['image', 'image2']:
+        folder_path = os.path.join(static_folder, subfolder)
+        if os.path.exists(folder_path):
+            try:
+                shutil.rmtree(folder_path)
+                app.logger.info(f"Deleted folder {folder_path}")
+            except Exception as e:
+                app.logger.error(f"Failed to delete folder {folder_path}. Reason: {e}")
+                
     # 强制刷新文件系统缓存
     #os.sync()
 
