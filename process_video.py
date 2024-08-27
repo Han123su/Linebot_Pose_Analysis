@@ -78,14 +78,23 @@ def clear_static_folder():
     if not os.path.exists(static_folder):
         return
     
+    # 清除 static 資料夾中的所有文件和資料夾
     for filename in os.listdir(static_folder):
         file_path = os.path.join(static_folder, filename)
         if os.path.isfile(file_path):
             try:
                 os.remove(file_path)
-                app.logger.info(f"Deleted {file_path}")
+                app.logger.info(f"Deleted file {file_path}")
             except Exception as e:
-                app.logger.error(f"Failed to delete {file_path}. Reason: {e}")
+                app.logger.error(f"Failed to delete file {file_path}. Reason: {e}")
+        elif os.path.isdir(file_path):
+            try:
+                # 刪除資料夾及其內容
+                shutil.rmtree(file_path)
+                app.logger.info(f"Deleted directory {file_path}")
+            except Exception as e:
+                app.logger.error(f"Failed to delete directory {file_path}. Reason: {e}")
     
     # 强制刷新文件系统缓存
     os.sync()
+
