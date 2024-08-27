@@ -30,27 +30,9 @@ def process(video_path):
     phase_diff_image_folder = os.path.join('static', 'image')
     lift_ratio_image_folder = os.path.join('static', 'image2')
 
-    # phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
-    # lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
-
-    timestamp = int(time.time())
-
-    if not os.path.exists(phase_diff_image_folder):
-        print(f"資料夾 {phase_diff_image_folder} 不存在！")
-    if not os.path.exists(lift_ratio_image_folder):
-        print(f"資料夾 {lift_ratio_image_folder} 不存在！")
-
-    phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) + f"?v={timestamp}" for img in os.listdir(phase_diff_image_folder)]
-    lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}" for img in os.listdir(lift_ratio_image_folder)]    
-
-    # 打印 URL 來進行調試
-    print("Phase Difference Images URLs:")
-    for url in phase_diff_images_urls:
-        print(url)
+    phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
+    lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
     
-    print("Lift Ratio Images URLs:")
-    for url in lift_ratio_images_urls:
-        print(url)
 
     # timestamp = datetime.now().timestamp()  # 取得當前時間戳
 
@@ -62,6 +44,14 @@ def process(video_path):
     #     url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}"
     #     for img in os.listdir(lift_ratio_image_folder)
     # ]
+
+    print("Phase Difference Images URLs:")
+    for url in phase_diff_images_urls:
+        print(url)
+    
+    print("Lift Ratio Images URLs:")
+    for url in lift_ratio_images_urls:
+        print(url)
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
     phase_diff_text_file = "static/phase_diff_results.txt"
