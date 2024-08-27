@@ -1,5 +1,6 @@
 import os
-import shutil 
+import shutil
+import time 
 #from datetime import datetime
 from flask import Flask, url_for 
 from linebot.models import *
@@ -29,8 +30,12 @@ def process(video_path):
     phase_diff_image_folder = os.path.join('static', 'image')
     lift_ratio_image_folder = os.path.join('static', 'image2')
 
-    phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
-    lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
+    # phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
+    # lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
+
+    timestamp = int(time.time())
+    phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) + f"?v={timestamp}" for img in os.listdir(phase_diff_image_folder)]
+    lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}" for img in os.listdir(lift_ratio_image_folder)]    
 
     # timestamp = datetime.now().timestamp()  # 取得當前時間戳
 
