@@ -98,7 +98,7 @@ def clear_static_folder():
                 app.logger.info(f"Deleted folder {folder_path}")
             except Exception as e:
                 app.logger.error(f"Failed to delete folder {folder_path}. Reason: {e}")
-                
+
     # 强制刷新文件系统缓存
-    #os.sync()
+    os.sync()
 
