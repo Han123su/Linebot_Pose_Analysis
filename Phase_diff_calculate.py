@@ -7,7 +7,7 @@ from obspy.signal.detrend import polynomial
 
 def Phase_diff(excel_file):
     # 創建結果文件夾
-    output_folder = os.path.join(os.path.dirname(excel_file), 'image')
+    output_folder = os.path.join(os.path.dirname(excel_file), 'Image')
     os.makedirs(output_folder, exist_ok=True)
 
     # 創建結果文本文件

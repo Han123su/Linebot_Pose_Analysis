@@ -5,7 +5,7 @@ import numpy as np
 
 def Lift_ratio(excel_file):
     # 創建結果文件夾
-    output_folder = os.path.join(os.path.dirname(excel_file), 'image2')
+    output_folder = os.path.join(os.path.dirname(excel_file), 'Image2')
     os.makedirs(output_folder, exist_ok=True)
 
     # 創建結果文本文件
