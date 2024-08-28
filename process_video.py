@@ -44,11 +44,11 @@ def process(video_path):
 
     # 生成圖片 URL
     phase_diff_images_urls = [
-        url_for('static', filename=f'image/{img}', _external=True) 
+        url_for('static', filename=f'Image/{img}', _external=True) 
         for img in os.listdir(phase_diff_image_folder)
     ]
     lift_ratio_images_urls = [
-        url_for('static', filename=f'image2/{img}', _external=True) 
+        url_for('static', filename=f'Image2/{img}', _external=True) 
         for img in os.listdir(lift_ratio_image_folder)
     ]
 
@@ -119,7 +119,7 @@ def clear_static_folder():
                 app.logger.error(f"Failed to delete directory {file_path}. Reason: {e}")
     
     # 確保 `static/image` 和 `static/image2` 資料夾中的內容也被刪除
-    for subfolder in ['image', 'image2']:
+    for subfolder in ['Image', 'Image2']:
         folder_path = os.path.join(static_folder, subfolder)
         if os.path.exists(folder_path):
             try:
