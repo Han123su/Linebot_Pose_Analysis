@@ -27,8 +27,8 @@ def process(video_path):
     Phase_diff(excel_file)
     Lift_ratio(excel_file)
 
-    phase_diff_image_folder = os.path.join('static', 'image')
-    lift_ratio_image_folder = os.path.join('static', 'image2')
+    phase_diff_image_folder = os.path.join('static', 'Image')
+    lift_ratio_image_folder = os.path.join('static', 'Image2')
 
     # phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
     # lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
@@ -70,7 +70,7 @@ def process(video_path):
     #     url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}"
     #     for img in os.listdir(lift_ratio_image_folder)
     # ]
-    
+
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
     phase_diff_text_file = "static/phase_diff_results.txt"
