@@ -49,14 +49,6 @@ def process(video_path):
         for img in os.listdir(lift_ratio_image_folder)
     ]
 
-    print("Phase Difference Images URLs:")
-    for url in phase_diff_images_urls:
-        print(url)
-    
-    print("Lift Ratio Images URLs:")
-    for url in lift_ratio_images_urls:
-        print(url)
-
     # timestamp = datetime.now().timestamp()  # 取得當前時間戳
     #
     # phase_diff_images_urls = [
@@ -68,6 +60,13 @@ def process(video_path):
     #     for img in os.listdir(lift_ratio_image_folder)
     # ]
 
+    print("Phase Difference Images URLs:")
+    for url in phase_diff_images_urls:
+        print(url)
+    
+    print("Lift Ratio Images URLs:")
+    for url in lift_ratio_images_urls:
+        print(url)
 
     # 讀取 Phase_diff 和 Lift_ratio 生成的文字結果
     phase_diff_text_file = "static/phase_diff_results.txt"
