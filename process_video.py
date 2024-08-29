@@ -30,9 +30,6 @@ def process(video_path):
     phase_diff_image_folder = os.path.join('static', 'Image')
     lift_ratio_image_folder = os.path.join('static', 'Image2')
 
-    # phase_diff_images_urls = [url_for('static', filename=f'image/{img}', _external=True) for img in os.listdir(phase_diff_image_folder)]
-    # lift_ratio_images_urls = [url_for('static', filename=f'image2/{img}', _external=True) for img in os.listdir(lift_ratio_image_folder)]
-    
      # 確保資料夾存在
     if not os.path.exists(phase_diff_image_folder):
         print(f"資料夾 {phase_diff_image_folder} 不存在")
@@ -61,13 +58,13 @@ def process(video_path):
         print(url)
 
     # timestamp = datetime.now().timestamp()  # 取得當前時間戳
-
+    #
     # phase_diff_images_urls = [
-    #     url_for('static', filename=f'image/{img}', _external=True) + f"?v={timestamp}" 
+    #     url_for('static', filename=f'Image/{img}', _external=True) + f"?v={timestamp}" 
     #     for img in os.listdir(phase_diff_image_folder)
     # ]
     # lift_ratio_images_urls = [
-    #     url_for('static', filename=f'image2/{img}', _external=True) + f"?v={timestamp}"
+    #     url_for('static', filename=f'Image2/{img}', _external=True) + f"?v={timestamp}"
     #     for img in os.listdir(lift_ratio_image_folder)
     # ]
 
