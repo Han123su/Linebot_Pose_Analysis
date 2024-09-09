@@ -10,7 +10,8 @@ from linebot.exceptions import (
 )
 from linebot.models import *
 
-app = Flask(__name__)
+#app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 # Channel Access Token
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
@@ -80,7 +81,7 @@ def handle_video_message(event):
         reply_messages = reply_messages[5:]
 
     # 清理 static 文件夹中的旧文件
-    clear_static_folder()
+    # clear_static_folder()
     
     
 if __name__ == "__main__":

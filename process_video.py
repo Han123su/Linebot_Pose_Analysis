@@ -41,11 +41,11 @@ def process(video_path):
 
     # 生成圖片 URL
     phase_diff_images_urls = [
-        url_for('static', filename=f'Image/{img}', _external=True) 
+        url_for('static', filename=f'Image/{img}', _external=True, _scheme='https') 
         for img in os.listdir(phase_diff_image_folder)
     ]
     lift_ratio_images_urls = [
-        url_for('static', filename=f'Image2/{img}', _external=True) 
+        url_for('static', filename=f'Image2/{img}', _external=True, _scheme='https') 
         for img in os.listdir(lift_ratio_image_folder)
     ]
 

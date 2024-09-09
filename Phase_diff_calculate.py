@@ -26,7 +26,7 @@ def Phase_diff(excel_file):
         idxL = 2
 
         # 使用 polynomial 去趨勢處理並繪製圖形
-        detrended_Ly = polynomial(df['L_Heel_29'], order=2, plot=True)
+        detrended_Ly = polynomial(df['L_Heel_29'], order=2, plot=False)
         x1 = detrended_Ly
         for element in x1:
             s1.cell(idxL, 4).value = element
@@ -36,7 +36,7 @@ def Phase_diff(excel_file):
         idxR = 2
 
         # 使用 polynomial 去趨勢處理並繪製圖形
-        detrended_Ry = polynomial(df['R_Heel_30'], order=2, plot=True)
+        detrended_Ry = polynomial(df['R_Heel_30'], order=2, plot=False)
         x2 = detrended_Ry
         for element in x2:
             s1.cell(idxR, 5).value = element
