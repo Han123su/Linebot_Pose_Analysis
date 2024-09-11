@@ -1,7 +1,6 @@
 import os
 import shutil
-import time 
-#from datetime import datetime
+import random
 from flask import Flask, url_for 
 from linebot.models import *
 from Phase_diff_calculate import Phase_diff
@@ -40,25 +39,28 @@ def process(video_path):
         return
 
     # 生成圖片 URL
-    phase_diff_images_urls = [
-        url_for('static', filename=f'Image/{img}', _external=True, _scheme='https') 
-        for img in os.listdir(phase_diff_image_folder)
-    ]
-    lift_ratio_images_urls = [
-        url_for('static', filename=f'Image2/{img}', _external=True, _scheme='https') 
-        for img in os.listdir(lift_ratio_image_folder)
-    ]
-
-    # timestamp = datetime.now().timestamp()  # 取得當前時間戳
-    #
     # phase_diff_images_urls = [
-    #     url_for('static', filename=f'Image/{img}', _external=True) + f"?v={timestamp}" 
+    #     url_for('static', filename=f'Image/{img}', _external=True, _scheme='https') 
     #     for img in os.listdir(phase_diff_image_folder)
     # ]
     # lift_ratio_images_urls = [
-    #     url_for('static', filename=f'Image2/{img}', _external=True) + f"?v={timestamp}"
+    #     url_for('static', filename=f'Image2/{img}', _external=True, _scheme='https') 
     #     for img in os.listdir(lift_ratio_image_folder)
     # ]
+
+    # 生成隨機亂碼的函數
+    def generate_random_code():
+        return str(random.randint(1000000000, 9999999999)) 
+
+    phase_diff_images_urls = [
+        url_for('static', filename=f'Image/{img}', _external=True, _scheme='https') + f'?v={generate_random_code()}'
+        for img in os.listdir(phase_diff_image_folder)
+    ]
+
+    lift_ratio_images_urls = [
+        url_for('static', filename=f'Image2/{img}', _external=True, _scheme='https') + f'?v={generate_random_code()}'
+        for img in os.listdir(lift_ratio_image_folder)
+    ]
 
     print("Phase Difference Images URLs:")
     for url in phase_diff_images_urls:
