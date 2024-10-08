@@ -1,5 +1,5 @@
 import os
-from process_video import process, clear_static_folder
+from process_video import process
 from flask import Flask, request, abort
 
 from linebot import (
@@ -9,6 +9,8 @@ from linebot.exceptions import (
     InvalidSignatureError, LineBotApiError
 )
 from linebot.models import *
+from pathlib import Path
+import shutil
 
 #app = Flask(__name__)
 app = Flask(__name__, static_folder='static', static_url_path='/static')
@@ -82,10 +84,13 @@ def handle_video_message(event):
             break
         reply_messages = reply_messages[5:]
 
-    # 清理 static 文件夹中的旧文件
-    # clear_static_folder()
-    
-    
+    # 在完成回覆後刪除 static 資料夾
+    # static_folder = Path('static')
+    # if static_folder.exists():
+    #     shutil.rmtree(static_folder)
+    #     app.logger.info("static 資料夾已刪除")
+
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
