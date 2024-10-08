@@ -84,11 +84,11 @@ def handle_video_message(event):
             break
         reply_messages = reply_messages[5:]
 
-    # 在完成回覆後刪除 static 資料夾
-    # static_folder = Path('static')
-    # if static_folder.exists():
-    #     shutil.rmtree(static_folder)
-    #     app.logger.info("static 資料夾已刪除")
+    在完成回覆後刪除 static 資料夾
+    static_folder = Path('static')
+    if static_folder.exists():
+        shutil.rmtree(static_folder)
+        app.logger.info("static 資料夾已刪除")
 
 
 if __name__ == "__main__":
