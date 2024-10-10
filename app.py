@@ -87,8 +87,14 @@ def handle_video_message(event):
     # 在完成回覆後刪除 static 資料夾
     static_folder = Path('static')
     if static_folder.exists():
-        shutil.rmtree(static_folder)
-        app.logger.info("static 資料夾已刪除")
+        for item in static_folder.iterdir():
+            # 保留 'image' 和 'image2' 資料夾
+            if item.is_dir() and item.name not in ['Image', 'Image2']:
+                shutil.rmtree(item)
+                app.logger.info(f"資料夾 {item} 已刪除")
+            elif item.is_file():
+                item.unlink()  # 刪除文件
+                app.logger.info(f"文件 {item} 已刪除")
 
 
 if __name__ == "__main__":
