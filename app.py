@@ -66,12 +66,12 @@ def handle_message(event):
     if msg == "選擇背面影片":
         user_choices[user_id] = "back"
         user_states[user_id] = "ready"
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✅ 你已選擇背面影片，請上傳影片進行分析"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你已選擇背面影片，請上傳影片進行分析"))
     
     elif msg == "選擇側面影片":
         user_choices[user_id] = "side"
         user_states[user_id] = "waiting"
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️ 目前僅支援背面影片，請重新選擇"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️目前僅支援背面影片，請重新選擇"))
         send_video_type_selection(user_id, event.reply_token)
 
     else:
@@ -86,7 +86,7 @@ def handle_message(event):
 def handle_video_message(event): 
     user_id = event.source.user_id
     if user_choices.get(user_id) != "back" or user_states.get(user_id) != "ready":
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 請先選擇『背面影片』才能上傳影片"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請先選擇『背面影片』才能上傳影片"))
         return
 
     user_states[user_id] = "processing"
@@ -130,7 +130,7 @@ def handle_video_message(event):
                 item.unlink()
 
     # 回到選單狀態
-    send_video_type_selection(user_id, event.reply_token, "✅ 分析完成！請選擇下一支影片類型：")
+    send_video_type_selection(user_id, event.reply_token, "分析完成！請選擇下一支影片類型：")
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
