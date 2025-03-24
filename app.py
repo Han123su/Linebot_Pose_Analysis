@@ -1,3 +1,4 @@
+
 import os
 from process_video import process
 from flask import Flask, request, abort
@@ -12,90 +13,124 @@ from linebot.models import *
 from pathlib import Path
 import shutil
 
-#app = Flask(__name__)
+# Flask app
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 
-# # Channel Access Token
-# line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
+# LINE Channel Token and Secret
 line_bot_api = LineBotApi('ZKFSSh5O1UScyOoIOVZHPuSSQISeQgjzZIanIPQADT8iKXPzhUHn+0IPcUklijOKeChIcYemYwnrvzorDZ/J5nhQCSJxJ1Y5s0keI2sTBxuV8dO6T9Qs4w8ye0B5rNLR5VXlyziOYLWRvP40ZCg2UgdB04t89/1O/w1cDnyilFU=')
-# # Channel Secret
-# handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 handler = WebhookHandler('ebddbbcefa93f0e69889881adf816763')
 
+# 使用者選擇與狀態記錄
+user_choices = {}  # 使用者影片類型選擇
+user_states = {}   # 使用者狀態：waiting, ready, processing
 
-# 監聽所有來自 /callback 的 Post Request
+# 快速選單函式
+def send_video_type_selection(user_id, reply_token, welcome_text="請選擇你要分析的影片類型："):
+    user_choices[user_id] = None
+    user_states[user_id] = 'waiting'
+    message = TextSendMessage(
+        text=welcome_text,
+        quick_reply=QuickReply(
+            items=[
+                QuickReplyButton(action=MessageAction(label="背面影片", text="選擇背面影片")),
+                QuickReplyButton(action=MessageAction(label="側面影片", text="選擇側面影片")),
+            ]
+        )
+    )
+    line_bot_api.reply_message(reply_token, message)
+
+# LINE webhook callback
 @app.route("/callback", methods=['POST'])
 def callback():
-    # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
-    # get request body as text
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
-    # handle webhook body
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
     return 'OK'
 
+# 使用者加入聊天室時自動跳出選單
+@handler.add(FollowEvent)
+def handle_follow(event):
+    user_id = event.source.user_id
+    send_video_type_selection(user_id, event.reply_token, "歡迎使用姿勢分析系統！請選擇你要分析的影片類型：")
+
 # 處理文字訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = TextSendMessage(text="你是不是說: " + event.message.text)
-    line_bot_api.reply_message(event.reply_token, message)
+    user_id = event.source.user_id
+    msg = event.message.text.strip()
+
+    if msg == "選擇背面影片":
+        user_choices[user_id] = "back"
+        user_states[user_id] = "ready"
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="✅ 你已選擇背面影片，請上傳影片進行分析"))
+    
+    elif msg == "選擇側面影片":
+        user_choices[user_id] = "side"
+        user_states[user_id] = "waiting"
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️ 目前僅支援背面影片，請重新選擇"))
+        send_video_type_selection(user_id, event.reply_token)
+
+    else:
+        state = user_states.get(user_id, 'waiting')
+        if state == "ready":
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請上傳背面影片（.mp4）進行分析"))
+        else:
+            send_video_type_selection(user_id, event.reply_token, "請先選擇你要分析的影片類型：")
 
 # 處理影片訊息
 @handler.add(MessageEvent, message=VideoMessage)
 def handle_video_message(event): 
+    user_id = event.source.user_id
+    if user_choices.get(user_id) != "back" or user_states.get(user_id) != "ready":
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="❌ 請先選擇『背面影片』才能上傳影片"))
+        return
+
+    user_states[user_id] = "processing"
+
     os.makedirs('static', exist_ok=True)
     message_content = line_bot_api.get_message_content(event.message.id)
     video_path = os.path.join("static", f"{event.message.id}.mp4")
     
-    # 將影片儲存到本地
     with open(video_path, 'wb') as fd:
         for chunk in message_content.iter_content():
             fd.write(chunk)
     
-    # 呼叫後端處理函式
     phase_diff_images, lift_ratio_images, phase_diff_text, lift_ratio_text = process(video_path)
 
-    # 準備回覆消息
     reply_messages = []
     if phase_diff_text:
         reply_messages.append(TextSendMessage(text="*** 相位差分析結果 ***\n" + phase_diff_text))
-
     if phase_diff_images:
-        reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in phase_diff_images])
-
+        reply_messages.extend([ImageSendMessage(original_content_url=url, preview_image_url=url) for url in phase_diff_images])
     if lift_ratio_text:
         reply_messages.append(TextSendMessage(text="*** 抬升高度比例分析結果 ***\n" + lift_ratio_text))
-
     if lift_ratio_images:
-        reply_messages.extend([ImageSendMessage(original_content_url=image_url, preview_image_url=image_url) for image_url in lift_ratio_images])
+        reply_messages.extend([ImageSendMessage(original_content_url=url, preview_image_url=url) for url in lift_ratio_images])
 
-    # 如果回覆消息數量超過 5 條，分批發送
-    while len(reply_messages) > 0:
+    while reply_messages:
         chunk = reply_messages[:5]
         try:
             line_bot_api.reply_message(event.reply_token, chunk)
         except LineBotApiError as e:
             app.logger.error(f"LineBotApiError: {e}")
-            # 確保在處理錯誤時不會重複發送
             break
         reply_messages = reply_messages[5:]
 
-    # 在完成回覆後刪除 static 資料夾
+    # 清理 static 資料夾
     static_folder = Path('static')
     if static_folder.exists():
         for item in static_folder.iterdir():
-            # 保留 'image' 和 'image2' 資料夾
             if item.is_dir() and item.name not in ['Image', 'Image2']:
                 shutil.rmtree(item)
-                app.logger.info(f"資料夾 {item} 已刪除")
             elif item.is_file():
-                item.unlink()  # 刪除文件
-                app.logger.info(f"文件 {item} 已刪除")
+                item.unlink()
 
+    # 回到選單狀態
+    send_video_type_selection(user_id, event.reply_token, "✅ 分析完成！請選擇下一支影片類型：")
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
