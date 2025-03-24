@@ -43,7 +43,7 @@ def send_video_type_selection(user_id, reply_token, welcome_text="請選擇你�
 @app.route("/callback", methods=['POST'])
 def callback():
     signature = request.headers['X-Line-Signature']
-    body = request.get_data(as_text=True)
+    body = request.get_data(as_text=True) 
     app.logger.info("Request body: " + body)
     try:
         handler.handle(body, signature)
