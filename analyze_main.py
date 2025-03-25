@@ -22,8 +22,13 @@ def print_header(title):
     print("=" * len(title))
 
 # === 讀取資料 ===
-xlsx_path = "4_close_0g_with_pingpong.xlsx"
+xlsx_path = "3_close_0g_with_pingpong.xlsx"
 df = pd.read_excel(xlsx_path)
+
+# print("=== Python: 資料總幀數 ===")
+# print(f"總幀數: {len(df)}")
+# print(f"欄位名稱：{list(df.columns)}")
+# print(f"第一筆數據 Lhip_y: {df['y_23'].iloc[0]}")
 
 fs = 30
 Lankle = df['y_27'].values
@@ -69,6 +74,12 @@ if right_cycles:
     print(f"右平均週期時間: {r_mean:.2f}秒 標準差: {r_std:.2f}秒 (變異數: {r_cv:.2f}%)")
 else:
     print("右腳週期無有效事件")
+
+#print("\n=== Python: 偵測事件數 ===")
+#print(f"左腳事件數: {len(left_events)}")
+#print(f"右腳事件數: {len(right_events)}")
+#print(f"左腳事件位置: {left_events[:10]} ...")
+#print(f"右腳事件位置: {right_events[:10]} ...")
 
 # === 幀數比例分析 ===
 smoothed = {
@@ -194,3 +205,6 @@ print("--- 骨盆週期高度差分析 ---")
 print(f"排除異常後平均值: {pelvis['filtered_mean']:.2f}")
 print(f"骨盆狀態: {pelvis['overall_direction']}")
 print(f"嚴重程度: {pelvis['overall_severity']}")
+
+# print("Python Left Events:", left_events)
+# print("Python Right Events:", right_events)

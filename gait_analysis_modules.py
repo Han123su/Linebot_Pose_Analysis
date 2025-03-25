@@ -125,7 +125,7 @@ def detect_gait_events(knee, ankle, heel, min_peak_distance, window_size, fs=30)
 
     # 複合信號
     comp = heel_s + 0.5 * ankle_s
-    adaptive_prominence = np.std(comp) * 0.35
+    adaptive_prominence = np.std(comp) * 0.2
 
     # 初步偵測波峰
     peaks, _ = find_peaks(comp, distance=min_peak_distance, prominence=adaptive_prominence)
@@ -148,8 +148,8 @@ def detect_gait_events(knee, ankle, heel, min_peak_distance, window_size, fs=30)
         else:
             corr = 0
 
-        is_valid = ((v_disp > adaptive_prominence * 0.3) or
-                    (np.max(np.abs(heel_vel)) > np.std(heel_vel) * 1.4)) and (corr > -0.3)
+        is_valid = ((v_disp > adaptive_prominence * 0.2) or
+                    (np.max(np.abs(heel_vel)) > np.std(heel_vel) * 1.2)) and (corr > -0.5)
 
         if is_valid:
             valid_events.append(i)
@@ -470,7 +470,6 @@ def analyze_knee_rom_and_si(Lknee_y, Rknee_y):
     }
 
 def analyze_pelvis(data, points_x, points_y, left_events, right_events, fs):
-    import numpy as np
 
     def check_ball_data(df):
         keys = ['left_ball_x', 'right_ball_x', 'left_ball_y', 'right_ball_y']
@@ -489,25 +488,42 @@ def analyze_pelvis(data, points_x, points_y, left_events, right_events, fs):
     if check_ball_data(data):
         Lhip_x, Lhip_y = data['left_ball_x'].values, data['left_ball_y'].values
         Rhip_x, Rhip_y = data['right_ball_x'].values, data['right_ball_y'].values
+        # print("[INFO] 使用：球的座標")
+        # print(f"Lhip_y[0] = {Lhip_y[0]:.2f} (from left_ball_y)")
     else:
         Lhip_x, Lhip_y = data['x_23'].values, data['y_23'].values
         Rhip_x, Rhip_y = data['x_24'].values, data['y_24'].values
+        # print("[INFO] 使用：關節的座標")
+        # print(f"Lhip_y[0] = {Lhip_y[0]:.2f} (from y_23)")
 
     if not left_events or not right_events or left_events[0] >= right_events[-1]:
         print("無法進行骨盆分析：事件數不足或排序異常")
         return {}
 
     start, end = left_events[0], right_events[-1]
+    frames_of_interest = list(range(start, end + 1))
+
+    # print("\n=== Python: 擷取資料範圍 ===")
+    # print(f"start frame: {start}, end frame: {end}")
+    # print(f"擷取幀數: {len(frames_of_interest)}")
+
+    # Trimmed events
+    trimmed_left = [i - start for i in left_events if start <= i <= end]
+
+    # Trimmed hip data
     Lhip_x, Lhip_y = Lhip_x[start:end+1], Lhip_y[start:end+1]
     Rhip_x, Rhip_y = Rhip_x[start:end+1], Rhip_y[start:end+1]
 
+    # 角度分析
     angles = get_angle(Lhip_x, Lhip_y, Rhip_x, Rhip_y)
     angle_mean = np.mean(angles)
     centered_angles = angles - angle_mean
     angle_std = np.std(angles)
 
+    # 高度差分析
     height_diff = Lhip_y - Rhip_y
-    centered_height_diff = height_diff - np.mean(height_diff)
+    mean_height_diff = np.mean(height_diff)
+    centered_height_diff = height_diff - mean_height_diff
 
     bins = [-np.inf, -4, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 4, np.inf]
     percents = hist_weighted_percentages(centered_angles, bins)
@@ -516,6 +532,7 @@ def analyze_pelvis(data, points_x, points_y, left_events, right_events, fs):
     right_high_small = percents[3]*0.5 + percents[4]*0.3
     right_low_small  = percents[7]*0.3 + percents[8]*0.5
 
+    # 判斷方向與嚴重程度
     large_diff = abs(right_high_large - right_low_large)
     small_diff = abs(right_high_small - right_low_small)
     total_large = np.sum(percents[[0,1,2,9,10,11]])
@@ -542,7 +559,7 @@ def analyze_pelvis(data, points_x, points_y, left_events, right_events, fs):
     if severity == '無':
         direction = '正常'
 
-    trimmed_left = [i-start for i in left_events if start <= i <= end]
+    # 週期高度差分析
     mean_sums = []
     for i in range(len(trimmed_left)-1):
         seg = centered_height_diff[trimmed_left[i]:trimmed_left[i+1]]
@@ -568,7 +585,7 @@ def analyze_pelvis(data, points_x, points_y, left_events, right_events, fs):
             'max': np.max(centered_angles),
             'std': angle_std,
         },
-        'height_diff_mean': np.mean(height_diff),
+        'height_diff_mean': mean_height_diff,
         'weighted': {
             'right_high_large': right_high_large,
             'right_low_large': right_low_large,
@@ -581,4 +598,3 @@ def analyze_pelvis(data, points_x, points_y, left_events, right_events, fs):
         'overall_severity': final_severity,
         'filtered_mean': filtered_mean
     }
-
