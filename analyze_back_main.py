@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd
 import numpy as np
-from gait_analysis_modules import (
+from back_analysis_modules import (
     analyze_fft_phase_diff,
     analyze_fft_zero_padding,
     calculate_dynamic_parameters,

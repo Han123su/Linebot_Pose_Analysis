@@ -9,3 +9,4 @@ openpyxl
 obspy
 scikit-learn
 tqdm
+PyWavelets

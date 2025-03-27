@@ -109,9 +109,9 @@ def handle_video_message(event):
         "--output", xlsx_path
     ])
 
-    # 3. 呼叫分析主程式 (analyze_main.py)
+    # 3. 呼叫分析主程式 (analyze_back_main.py)
     result = subprocess.run([
-        "python", "analyze_main.py",
+        "python", "analyze_back_main.py",
         "--input", xlsx_path,
         "--image_folder", "result_images"
     ], capture_output=True, text=True)
