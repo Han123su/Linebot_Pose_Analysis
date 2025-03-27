@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import numpy as np
 from gait_analysis_modules import (
@@ -22,8 +23,15 @@ def print_header(title):
     print("=" * len(title))
 
 # === 讀取資料 ===
-xlsx_path = "3_close_0g_with_pingpong.xlsx"
-df = pd.read_excel(xlsx_path)
+parser = argparse.ArgumentParser()
+parser.add_argument('--input', type=str, required=True, help='輸入的xlsx路徑')
+parser.add_argument('--image_folder', type=str, default='result_images', help='儲存圖像的資料夾')
+args = parser.parse_args()
+
+file_path = args.input
+image_save_folder = args.image_folder
+
+df = pd.read_excel(file_path)
 
 # print("=== Python: 資料總幀數 ===")
 # print(f"總幀數: {len(df)}")

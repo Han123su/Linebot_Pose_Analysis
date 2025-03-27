@@ -1,16 +1,14 @@
-
 import os
-from process_video import process
 from flask import Flask, request, abort
-
 from linebot import (
     LineBotApi, WebhookHandler
 )
-from linebot.exceptions import (
-    InvalidSignatureError, LineBotApiError
-)
+from linebot.exceptions import InvalidSignatureError
 from linebot.models import *
 from pathlib import Path
+import shutil
+import uuid
+import subprocess
 import shutil
 
 # Flask app
@@ -83,54 +81,57 @@ def handle_message(event):
 
 # 處理影片訊息
 @handler.add(MessageEvent, message=VideoMessage)
-def handle_video_message(event): 
+def handle_video_message(event):
     user_id = event.source.user_id
-    if user_choices.get(user_id) != "back" or user_states.get(user_id) != "ready":
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請先選擇『背面影片』才能上傳影片"))
+    user_choice = user_choices.get(user_id, None)
+
+    if user_choice != "back":
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="⚠️請先選擇影片角度（背面）後再上傳影片。")
+        )
+        send_video_type_selection(user_id, event.reply_token)
         return
 
-    user_states[user_id] = "processing"
+    # 1. 儲存影片
+    message_id = event.message.id
+    ext = '.mp4'
+    video_tempfile_path = os.path.join('static', f"{uuid.uuid4().hex}{ext}")
+    with open(video_tempfile_path, 'wb') as f:
+        for chunk in line_bot_api.get_message_content(message_id).iter_content():
+            f.write(chunk)
 
-    os.makedirs('static', exist_ok=True)
-    message_content = line_bot_api.get_message_content(event.message.id)
-    video_path = os.path.join("static", f"{event.message.id}.mp4")
-    
-    with open(video_path, 'wb') as fd:
-        for chunk in message_content.iter_content():
-            fd.write(chunk)
-    
-    phase_diff_images, lift_ratio_images, phase_diff_text, lift_ratio_text = process(video_path)
+    # 2. 呼叫骨架分析 (Pose_tracking_back_withBall)
+    xlsx_path = video_tempfile_path.replace('.mp4', '.xlsx')
+    subprocess.run([
+        "python", "Pose_tracking_back_withBall.py",
+        "--video", video_tempfile_path,
+        "--output", xlsx_path
+    ])
 
-    reply_messages = []
-    if phase_diff_text:
-        reply_messages.append(TextSendMessage(text="*** 相位差分析結果 ***\n" + phase_diff_text))
-    if phase_diff_images:
-        reply_messages.extend([ImageSendMessage(original_content_url=url, preview_image_url=url) for url in phase_diff_images])
-    if lift_ratio_text:
-        reply_messages.append(TextSendMessage(text="*** 抬升高度比例分析結果 ***\n" + lift_ratio_text))
-    if lift_ratio_images:
-        reply_messages.extend([ImageSendMessage(original_content_url=url, preview_image_url=url) for url in lift_ratio_images])
+    # 3. 呼叫分析主程式 (analyze_main.py)
+    result = subprocess.run([
+        "python", "analyze_main.py",
+        "--input", xlsx_path,
+        "--image_folder", "result_images"
+    ], capture_output=True, text=True)
 
-    while reply_messages:
-        chunk = reply_messages[:5]
-        try:
-            line_bot_api.reply_message(event.reply_token, chunk)
-        except LineBotApiError as e:
-            app.logger.error(f"LineBotApiError: {e}")
-            break
-        reply_messages = reply_messages[5:]
+    # 4. 回傳結果給使用者
+    if result.returncode == 0:
+        reply_text = result.stdout[-5000:] if result.stdout else "分析完成，無輸出內容"
+    else:
+        reply_text = f"分析失敗：{result.stderr}"
 
-    # 清理 static 資料夾
-    static_folder = Path('static')
-    if static_folder.exists():
-        for item in static_folder.iterdir():
-            if item.is_dir() and item.name not in ['Image', 'Image2']:
-                shutil.rmtree(item)
-            elif item.is_file():
-                item.unlink()
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
+    )
 
-    # 回到選單狀態
-    send_video_type_selection(user_id, event.reply_token, "分析完成！請選擇下一支影片類型：")
+    # 5. 清除中繼資料夾
+    for folder in ['static/FRAMES', 'static/FRAMES_MODIFY', 'static/FRAMES_TRACKING']:
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
