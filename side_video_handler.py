@@ -24,7 +24,7 @@ def handle_side_video(video_path: str, base_dir: str) -> str:
         # 判斷影片方向
         direction = quick_direction_check(video_path, base_dir)
         if direction is None:
-            return "無法從影片判斷方向，請重新上傳較清晰的影片。"
+            return "無法從影片判斷方向，請重新上傳較清晰的影片"
 
         # 檢查是否上傳了重複方向的影片
         if file_exists and existing_side == direction:

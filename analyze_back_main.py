@@ -17,11 +17,6 @@ from back_analysis_modules import (
     analyze_pelvis
 )
 
-def print_header(title):
-    print("\n" + "=" * len(title))
-    print(title)
-    print("=" * len(title))
-
 # === 讀取資料 ===
 parser = argparse.ArgumentParser()
 parser.add_argument('--input', type=str, required=True, help='輸入的xlsx路徑')
@@ -51,19 +46,19 @@ hip_x = {'Lhip': df['x_23'].values, 'Rhip': df['x_24'].values}
 hip_y = {'Lhip': df['y_23'].values, 'Rhip': df['y_24'].values}
 
 # === FFT 分析 ===
-print_header("FFT 相位分析")
+print("===== FFT 相位分析 =====\n")
 fft_result = analyze_fft_phase_diff(Lankle, Rankle, fs)
-print(f"主要頻率成分       : {fft_result['main_freq']:.3f} Hz")
-print(f"主頻相位差         : {fft_result['main_phase_diff_deg']:.2f}°")
-print(f"加權相位差         : {fft_result['weighted_phase_diff_deg']:.2f}°")
+print(f"主要頻率成分: {fft_result['main_freq']:.3f} Hz")
+print(f"主頻相位差: {fft_result['main_phase_diff_deg']:.2f}°")
+print(f"加權相位差: {fft_result['weighted_phase_diff_deg']:.2f}°")
 
-print_header("零填充 FFT 相位分析")
+print("===== 零填充 FFT 相位分析 =====\n")
 fft_zero = analyze_fft_zero_padding(Lankle, Rankle, fs)
-print(f"主要頻率成分       : {fft_zero['zero_freq']:.3f} Hz")
-print(f"相位差             : {fft_zero['zero_phase_diff_deg']:.2f}°")
+print(f"主要頻率成分: {fft_zero['zero_freq']:.3f} Hz")
+print(f"相位差: {fft_zero['zero_phase_diff_deg']:.2f}°")
 
 # === 週期偵測 ===
-print_header("步態週期分析")
+print("===== 步態週期分析 =====\n")
 min_peak_distance, window_size = calculate_dynamic_parameters(Lankle, fs)
 left_events, left_cycles = detect_gait_events(Lknee, Lankle, Lheel, min_peak_distance, window_size, fs)
 right_events, right_cycles = detect_gait_events(Rknee, Rankle, Rheel, min_peak_distance, window_size, fs)
@@ -103,7 +98,7 @@ smoothed = {
 Lper, Rper = calculate_ratios(smoothed)
 stats = analyze_lift_ratios(Lper, Rper)
 
-print("\n=== 幀數比例分析 ===")
+print("\n===== 幀數比例分析 =====\n")
 print(f"總幀數: {stats['frame_count']}")
 print(f"左側較高幀數比例: {stats['above']:.2f}")
 print(f"右側較高幀數比例: {stats['below']:.2f}")
@@ -119,7 +114,7 @@ else:
 
 
 # === Lift 分析 ===
-print_header("Lift 比例與膝部動力學")
+print("===== 抬腿比例分析 =====\n")
 ratios = calculate_ratios2(smoothed, left_events, right_events, hip_y)
 print(f"左腳 Lift 比例平均 : {np.mean(ratios['Lper']) * 100:.1f}% (SD: {np.std(ratios['Lper']) * 100:.1f}%)")
 print(f"右腳 Lift 比例平均 : {np.mean(ratios['Rper']) * 100:.1f}% (SD: {np.std(ratios['Rper']) * 100:.1f}%)")
@@ -131,7 +126,7 @@ print(f"左膝速度平均       : {np.mean(L_vel):.2f}, 加速度平均: {np.me
 print(f"右膝速度平均       : {np.mean(R_vel):.2f}, 加速度平均: {np.mean(R_acc):.2f}")
 
 # === PCA 分析 ===
-print_header("PCA 分析")
+print("===== PCA 分析 =====\n")
 pca_result = analyze_pca_features({
     'Lknee': smoothed['Lknee'],
     'Lankle': smoothed['Lankle'],
@@ -149,30 +144,30 @@ print(f"左腳: PC1: {left_exp[0]:.1f}%, PC2: {left_exp[1]:.1f}%")
 print(f"右腳: PC1: {right_exp[0]:.1f}%, PC2: {right_exp[1]:.1f}%")
 
 # === 形狀分析 ===
-print_header("三角形形狀差異")
+print("===== 三角形形狀差異 =====\n")
 area1, area2, area_ratio, shape_diff = analyze_triangle_shape(
     smoothed, left_events, right_events,
     np.mean(left_cycles), np.mean(right_cycles)
 )
-print(f"左腳三角形面積     : {area1:.2f}")
-print(f"右腳三角形面積     : {area2:.2f}")
-print(f"面積比             : {area_ratio:.3f}")
-print(f"形狀差異度         : {shape_diff:.3f}")
+print(f"左腳三角形面積: {area1:.2f}")
+print(f"右腳三角形面積: {area2:.2f}")
+print(f"面積比: {area_ratio:.3f}")
+print(f"形狀差異度: {shape_diff:.3f}")
 
 # === 膝關節分析 ===
-print_header("膝關節分析")
+print("===== 膝關節分析 =====\n")
 entropy = analyze_entropy_and_delay(smoothed['Lheel'], smoothed['Rheel'], fs)
-print(f"左腳近似熵         : {entropy['approx_entropy']['left']:.3f}")
-print(f"右腳近似熵         : {entropy['approx_entropy']['right']:.3f}")
-print(f"左右腳最大互相關   : {entropy['cross_correlation']['max_corr']:.3f}")
+print(f"左腳近似熵: {entropy['approx_entropy']['left']:.3f}")
+print(f"右腳近似熵: {entropy['approx_entropy']['right']:.3f}")
+print(f"左右腳最大互相關: {entropy['cross_correlation']['max_corr']:.3f}")
 
 rom_si_result = analyze_knee_rom_and_si(smoothed['Lknee'], smoothed['Rknee'])
-print(f"左膝活動範圍       : {rom_si_result['left_rom']:.2f}")
-print(f"右膝活動範圍       : {rom_si_result['right_rom']:.2f}")
-print(f"不對稱性指數(SI)   : {rom_si_result['si']:.2f}%")
+print(f"左膝活動範圍: {rom_si_result['left_rom']:.2f}")
+print(f"右膝活動範圍: {rom_si_result['right_rom']:.2f}")
+print(f"不對稱性指數(SI): {rom_si_result['si']:.2f}%")
 
 # === 骨盆分析 ===
-print_header("骨盆分析")
+print("===== 骨盆分析 =====\n")
 points_x = {
     'Lknee': df['x_25'],
     'Rknee': df['x_26'],
