@@ -246,39 +246,39 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     result += f"髖平均角速度大小 - 左:{L_hip_vel_magnitude:.2f} 右:{R_hip_vel_magnitude:.2f}\n\n"
     
     # 多周期關節角度範圍分析
-    result += "===== 多周期關節角度範圍分析 =====\n"
+    result += "==== 週期角度範圍分析 ====\n"
     
     if not np.isnan(L_knee_mean_cycle_range):
-        result += f"左膝平均周期範圍: {L_knee_mean_cycle_range:.2f} ± {L_knee_std_cycle_range:.2f}\n"
+        result += f"左膝平均週期範圍: {L_knee_mean_cycle_range:.2f} ± {L_knee_std_cycle_range:.2f}\n"
     else:
-        result += "左膝未檢測到足夠的周期點\n"
+        result += "左膝未檢測到足夠的週期點\n"
     
     if not np.isnan(R_knee_mean_cycle_range):
-        result += f"右膝平均周期範圍: {R_knee_mean_cycle_range:.2f} ± {R_knee_std_cycle_range:.2f}\n"
+        result += f"右膝平均週期範圍: {R_knee_mean_cycle_range:.2f} ± {R_knee_std_cycle_range:.2f}\n"
     else:
-        result += "右膝未檢測到足夠的周期點\n"
+        result += "右膝未檢測到足夠的週期點\n"
     
     if not np.isnan(L_knee_mean_cycle_range) and not np.isnan(R_knee_mean_cycle_range):
         knee_mean_cycle_range_diff = abs(L_knee_mean_cycle_range - R_knee_mean_cycle_range)
         result += f"膝左右平均範圍差異: {knee_mean_cycle_range_diff:.2f}\n\n"
     else:
-        result += "無法計算膝關節左右平均周期範圍差異\n\n"
+        result += "無法計算膝關節左右平均週期範圍差異\n\n"
     
     if not np.isnan(L_hip_mean_cycle_range):
-        result += f"左髖平均周期範圍: {L_hip_mean_cycle_range:.2f} ± {L_hip_std_cycle_range:.2f}\n"
+        result += f"左髖平均週期範圍: {L_hip_mean_cycle_range:.2f} ± {L_hip_std_cycle_range:.2f}\n"
     else:
-        result += "左髖未檢測到足夠的周期點\n"
+        result += "左髖未檢測到足夠的週期點\n"
     
     if not np.isnan(R_hip_mean_cycle_range):
-        result += f"右髖平均周期範圍: {R_hip_mean_cycle_range:.2f} ± {R_hip_std_cycle_range:.2f}\n"
+        result += f"右髖平均週期範圍: {R_hip_mean_cycle_range:.2f} ± {R_hip_std_cycle_range:.2f}\n"
     else:
-        result += "右髖未檢測到足夠的周期點\n"
+        result += "右髖未檢測到足夠的週期點\n"
     
     if not np.isnan(L_hip_mean_cycle_range) and not np.isnan(R_hip_mean_cycle_range):
         hip_mean_cycle_range_diff = abs(L_hip_mean_cycle_range - R_hip_mean_cycle_range)
         result += f"髖左右平均範圍差異: {hip_mean_cycle_range_diff:.2f}\n\n"
     else:
-        result += "無法計算髖關節左右平均周期範圍差異\n\n"
+        result += "無法計算髖關節左右平均週期範圍差異\n\n"
     
     # 熵值分析
     result += "===== 熵值分析 =====\n"
