@@ -291,7 +291,7 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     result += f"髖近似熵差異 - {abs(L_hip_entropy - R_hip_entropy):.4f} ({stable_hip})\n\n"
     
     # 波形差異分析
-    result += "===== 波形差異分析 (適用於非同步數據) =====\n"
+    result += "===== 波形差異分析 =====\n"
     knee_std_ratio = np.std(L_knee_aligned) / np.std(R_knee_aligned)
     hip_std_ratio = np.std(L_hip_aligned) / np.std(R_hip_aligned)
     result += f"膝角度變異對稱指數: {knee_std_ratio:.4f}\n"

@@ -7,7 +7,7 @@ def main():
     if len(sys.argv) > 1:
         xlsx_path = sys.argv[1]
     else:
-        xlsx_path = "Data_750g4.xlsx"  # 預設檔案名稱
+        xlsx_path = "Data_side.xlsx"  
     
     # 取樣率（影片通常是 30 FPS）
     fs = 30
