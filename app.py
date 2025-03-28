@@ -63,7 +63,7 @@ def handle_text(event):
     if text == "選擇背面影片":
         user_choices[user_id] = "back"
         user_states[user_id] = "ready"
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你已選擇背面影片，請上傳影片（.mp4）"))
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="你已選擇背面影片，請上傳影片"))
 
     elif text == "選擇側面影片":
         user_choices[user_id] = "side"
@@ -93,7 +93,7 @@ def handle_video(event):
     message_id = event.message.id
     ext = '.mp4'
     # tmp_dir = tempfile.mkdtemp()
-    tmp_dir = os.path.join("static", "uploads")
+    tmp_dir = os.path.join("static")
     os.makedirs(tmp_dir, exist_ok=True)
     video_path = os.path.join(tmp_dir, f"{uuid.uuid4().hex}{ext}")
     with open(video_path, 'wb') as f:
@@ -126,8 +126,8 @@ def handle_video(event):
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️請先選擇影片角度"))
 
     # 清理分析產生的暫存資料夾
-    for folder_name in ["FRAMES", "FRAMES_MP", "FRAMES_TRACKING"]:
-        folder_path = os.path.join(base_dir, folder_name)
+    for folder_name in ["FRAMES", "FRAMES_MP", "FRAMES_MODIFY", "FRAMES_TRACKING"]:
+        folder_path = os.path.join(tmp_dir, folder_name)
         if os.path.exists(folder_path):
             shutil.rmtree(folder_path)
 # 啟動 Flask
