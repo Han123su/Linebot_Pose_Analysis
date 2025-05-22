@@ -52,7 +52,7 @@ def callback():
 @handler.add(FollowEvent)
 def handle_follow(event):
     user_id = event.source.user_id
-    send_video_type_selection(user_id, event.reply_token, "歡迎使用姿勢分析系統！請選擇你要分析的影片類型：")
+    send_video_type_selection(user_id, event.reply_token, "歡迎使用步態分析系統！請選擇你要分析的影片角度")
 
 # 文字訊息處理
 @handler.add(MessageEvent, message=TextMessage)

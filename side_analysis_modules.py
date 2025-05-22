@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks, butter, filtfilt, windows
 import pywt
+from scipy.spatial import ConvexHull
 
 def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     """
@@ -358,16 +359,13 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     # 熵值分析
     result += "===== 熵值分析 =====\n"
     result += f"膝近似熵 - 左:{L_knee_entropy:.4f} 右:{R_knee_entropy:.4f}\n"
-    stable_knee = "左較穩定" if L_knee_entropy < R_knee_entropy else "右較穩定"
-    result += f"膝近似熵差異 - {abs(L_knee_entropy - R_knee_entropy):.4f} ({stable_knee})\n"
+    result += f"膝近似熵差異 - {abs(L_knee_entropy - R_knee_entropy):.4f}\n"
     
     result += f"髖近似熵 - 左:{L_hip_entropy:.4f} 右:{R_hip_entropy:.4f}\n"
-    stable_hip = "左較穩定" if L_hip_entropy < R_hip_entropy else "右較穩定"
-    result += f"髖近似熵差異 - {abs(L_hip_entropy - R_hip_entropy):.4f} ({stable_hip})\n"
+    result += f"髖近似熵差異 - {abs(L_hip_entropy - R_hip_entropy):.4f}\n"
 
     result += f"踝近似熵 - 左:{L_ankle_entropy:.4f} 右:{R_ankle_entropy:.4f}\n"
-    stable_ankle = "左較穩定" if L_ankle_entropy < R_ankle_entropy else "右較穩定"
-    result += f"踝近似熵差異 - {abs(L_ankle_entropy - R_ankle_entropy):.4f} ({stable_ankle})\n\n"
+    result += f"踝近似熵差異 - {abs(L_ankle_entropy - R_ankle_entropy):.4f}\n\n"
     
     # 波形參數比較分析
     result += "===== 波形參數比較分析 =====\n"
@@ -382,9 +380,191 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
         result += "髖關節檢測不到足夠的波峰來分析波形參數\n"
     
     if not np.isnan(ankle_waveform_sim):
-        result += f"踝關節波形參數相似度: {ankle_waveform_sim:.4f}\n"
+        result += f"踝關節波形參數相似度: {ankle_waveform_sim:.4f}\n\n"
     else:
-        result += "踝關節檢測不到足夠的波峰來分析波形參數\n"
+        result += "踝關節檢測不到足夠的波峰來分析波形參數\n\n"
+
+    # === 擺動分析 ===
+    result += "===== 擺動分析 =====\n"
+
+    def do_pca(data):
+        data_centered = data - np.mean(data, axis=0)
+        U, S, Vt = np.linalg.svd(data_centered, full_matrices=False)
+        coeff = Vt.T
+        score = data_centered @ coeff
+        latent = (S**2) / (data.shape[0] - 1)
+        return coeff, score, latent
+
+    def angle_range(vectors):
+        angles = np.mod(np.degrees(np.arctan2(vectors[:,1], vectors[:,0])), 360)
+        sorted_angles = np.sort(angles)
+        diffs = np.diff(np.concatenate([sorted_angles, [sorted_angles[0] + 360]]))
+        return 360 - np.max(diffs)
+
+    # 【hip-knee】方向角範圍
+    L_hip_knee_vec = np.stack([df['L_Knee_25_x'] - df['L_Hip_23_x'], df['L_Knee_25_y'] - df['L_Hip_23_y']], axis=1)
+    R_hip_knee_vec = np.stack([df['R_Knee_26_x'] - df['R_Hip_24_x'], df['R_Knee_26_y'] - df['R_Hip_24_y']], axis=1)
+
+    angle_range_L = angle_range(L_hip_knee_vec)
+    angle_range_R = angle_range(R_hip_knee_vec)
+    diff_range = abs(angle_range_L - angle_range_R)
+
+    result += f"肩-髖 方向角範圍：\n左:{angle_range_L:.2f}° 右:{angle_range_R:.2f}° 差異:{diff_range:.2f}°\n"
+
+    # 【膝關節】路徑長度與主軸角度
+    L_knee_points = np.stack([df['L_Knee_25_x'], df['L_Knee_25_y']], axis=1)
+    R_knee_points = np.stack([df['R_Knee_26_x'], df['R_Knee_26_y']], axis=1)
+
+    def pca_path_analysis(points):
+        mean_centered = points - np.mean(points, axis=0)
+        cov_inv = np.linalg.pinv(np.cov(mean_centered.T))
+        dists = np.sqrt(np.sum((mean_centered @ cov_inv) * mean_centered, axis=1))
+        inliers = dists <= np.sqrt(5.99)
+        clean = points[inliers]
+        path_len = np.sum(np.linalg.norm(np.diff(clean, axis=0), axis=1))
+        coeff, _, _ = do_pca(clean)
+        return path_len, coeff
+
+    # 執行 PCA 分析
+    path_L, coeff_L = pca_path_analysis(L_knee_points)
+    path_R, coeff_R = pca_path_analysis(R_knee_points)
+
+    # 對齊主軸方向
+    if np.sign(coeff_L[0, 0]) != np.sign(coeff_R[0, 0]):
+        coeff_R[:, 0] = -coeff_R[:, 0]
+
+    def principal_axis_angle(coeff):
+        """轉換主軸向量的角度，使其位於 [-90°, +90°] 區間內，利於比較方向性"""
+        angle = np.degrees(np.arctan2(coeff[1, 0], coeff[0, 0]))
+        if angle > 90:
+            angle -= 180
+        elif angle < -90:
+            angle += 180
+        return angle
+
+    # 使用方向標準化計算角度
+    angle_L = principal_axis_angle(coeff_L)
+    angle_R = principal_axis_angle(coeff_R)
+    angle_diff = abs(abs(angle_L) - abs(angle_R))
+
+    result += f"膝關節 路徑長度：\n左:{path_L:.2f} 右:{path_R:.2f} \n差異:{abs(path_L - path_R):.2f}\n"
+    result += f"膝關節 主軸角度：\n左:{angle_L:.2f}° 右:{angle_R:.2f}° 差異:{angle_diff:.2f}°\n\n"
+
+    # 計算腳部三角形重心座標（根據 ankle, heel, foot）
+    centroid_R_dense = np.stack([
+        (df['R_Ankle_28_x'] + df['R_Heel_30_x'] + df['R_Foot_32_x']) / 3,
+        (df['R_Ankle_28_y'] + df['R_Heel_30_y'] + df['R_Foot_32_y']) / 3
+    ], axis=1)
+
+    centroid_L_dense = np.stack([
+        (df['L_Ankle_27_x'] + df['L_Heel_29_x'] + df['L_Foot_31_x']) / 3,
+        (df['L_Ankle_27_y'] + df['L_Heel_29_y'] + df['L_Foot_31_y']) / 3
+    ], axis=1)
+
+    # def classify_gait_phases(heel_y, toe_y, centroid, angle):
+    #     # 建立凸包9區域門檻
+    #     cx = centroid[:, 0]
+    #     cy = centroid[:, 1]
+    #     minx, maxx = np.min(cx), np.max(cx)
+    #     miny, maxy = np.min(cy), np.max(cy)
+    #     x1, x2 = minx + (maxx - minx) / 3, minx + 2 * (maxx - minx) / 3
+    #     y1, y2 = miny + (maxy - miny) / 3, miny + 2 * (maxy - miny) / 3
+
+    #     def region(x, y):
+    #         col = 1 if x < x1 else (3 if x > x2 else 2)
+    #         row = 1 if y < y1 else (3 if y > y2 else 2)
+    #         return (row - 1) * 3 + col
+
+    #     dy = heel_y - toe_y
+    #     n = len(dy)
+    #     phase = np.zeros(n, dtype=int)
+    #     prev = 4
+
+    #     for i in range(n):
+    #         r = region(cx[i], cy[i])
+    #         d = dy[i]
+    #         a = angle[i]
+    #         p = prev
+
+    #         if r == 2:
+    #             p = 4
+    #         elif r == 5 or r == 8:
+    #             p = 2
+    #         elif r == 4:
+    #             p = 1 if d > 2 else 2
+    #         elif r == 6:
+    #             p = 3 if d < -2 else 2
+    #         elif r == 1:
+    #             if d > 2 and a < -40:
+    #                 p = 1
+    #             else:
+    #                 p = 2
+    #         elif r == 3:
+    #             if d < -2 and a > 40:
+    #                 p = 3
+    #             else:
+    #                 p = 2
+    #         elif r == 7:
+    #             p = 1
+    #         elif r == 9:
+    #             p = 3
+    #         else:
+    #             p = prev
+
+    #         if (prev == 1 and p == 2) or (prev == 2 and p == 3) or (prev == 3 and p == 4) or (prev == 4 and p == 1):
+    #             phase[i] = p
+    #             prev = p
+    #         else:
+    #             phase[i] = prev
+
+    #     stats = [np.sum(phase == k) / n * 100 for k in [1, 2, 3, 4]]
+    #     return stats
+
+    # heel_R_y = df['R_Heel_30_y'].to_numpy()
+    # toe_R_y = df['R_Foot_32_y'].to_numpy()
+    # angle_R = df['Angle_28_30_32'].to_numpy()
+
+    # heel_L_y = df['L_Heel_29_y'].to_numpy()
+    # toe_L_y = df['L_Foot_31_y'].to_numpy()
+    # angle_L = df['Angle_27_29_31'].to_numpy()
+
+    # phase_stats_R = classify_gait_phases(heel_R_y, toe_R_y, centroid_R_dense, angle_R)
+    # phase_stats_L = classify_gait_phases(heel_L_y, toe_L_y, centroid_L_dense, angle_L)
+
+    # === 凸包活動區面積、長寬比、步態階段比例 ===
+    result += "=== 凸包活動區面積比分析 ===\n"
+    hull_R = ConvexHull(centroid_R_dense)
+    area_R = hull_R.volume
+    hull_L = ConvexHull(centroid_L_dense)
+    area_L = hull_L.volume
+    result += f"右腳面積: {area_R:.2f} px^2\n"
+    result += f"左腳面積: {area_L:.2f} px^2\n"
+    result += f"凸包面積比: {area_R / area_L:.2f}\n"
+
+    result += "\n=== 軌跡方向性(長寬比)分析 ===\n"
+    xR, yR = centroid_R_dense[:,0], centroid_R_dense[:,1]
+    xL, yL = centroid_L_dense[:,0], centroid_L_dense[:,1]
+    width_R = xR.max() - xR.min()
+    height_R = yR.max() - yR.min()
+    ar_R = width_R / height_R
+    width_L = xL.max() - xL.min()
+    height_L = yL.max() - yL.min()
+    ar_L = width_L / height_L
+    result += f"右腳 長寬比: {ar_R:.2f}\n"
+    result += f"左腳 長寬比: {ar_L:.2f}\n"
+    result += f"差值: {abs(ar_R - ar_L):.2f}\n"
+
+    # result += "\n===== 右腳階段時間分配分析 =====\n"
+    # result += f"  腳跟著地: {phase_stats_R[0]:.1f}%\n"
+    # result += f"  整腳著地: {phase_stats_R[1]:.1f}%\n"
+    # result += f"  腳跟離地: {phase_stats_R[2]:.1f}%\n"
+    # result += f"  整腳離地: {phase_stats_R[3]:.1f}%\n"
+
+    # result += "\n===== 左腳階段時間分配分析 =====\n"
+    # result += f"  腳跟著地: {phase_stats_L[0]:.1f}%\n"
+    # result += f"  整腳著地: {phase_stats_L[1]:.1f}%\n"
+    # result += f"  腳跟離地: {phase_stats_L[2]:.1f}%\n"
+    # result += f"  整腳離地: {phase_stats_L[3]:.1f}%\n"
 
     return result
 
@@ -497,3 +677,60 @@ def approximate_entropy(data, m=2, r=0.2):
     
     # 計算近似熵
     return np.abs(phi(m) - phi(m+1))
+
+    # === 擺動分析 ===
+    result += "===== 擺動分析 =====\n"
+    def do_pca(data):
+        data_centered = data - np.mean(data, axis=0)
+        U, S, Vt = np.linalg.svd(data_centered, full_matrices=False)
+        coeff = Vt.T
+        score = data_centered @ coeff
+        latent = (S**2) / (data.shape[0] - 1)
+        return coeff, score, latent
+
+    def angle_range(vectors):
+        angles = np.mod(np.degrees(np.arctan2(vectors[:,1], vectors[:,0])), 360)
+        sorted_angles = np.sort(angles)
+        diffs = np.diff(np.concatenate([sorted_angles, [sorted_angles[0] + 360]]))
+        return 360 - np.max(diffs)
+
+    # 【hip-knee】方向角範圍
+    L_hip_knee_vec = np.stack([df['L_Knee_25_x'] - df['L_Hip_23_x'], df['L_Knee_25_y'] - df['L_Hip_23_y']], axis=1)
+    R_hip_knee_vec = np.stack([df['R_Knee_26_x'] - df['R_Hip_24_x'], df['R_Knee_26_y'] - df['R_Hip_24_y']], axis=1)
+
+    angle_range_L = angle_range(L_hip_knee_vec)
+    angle_range_R = angle_range(R_hip_knee_vec)
+    diff_range = abs(angle_range_L - angle_range_R)
+
+    result += f"【hip-knee】方向角範圍：左:{angle_range_L:.2f}° 右:{angle_range_R:.2f}° 差異:{diff_range:.2f}°\n"
+
+    # 【膝關節】路徑長度與主軸角度
+    L_knee_points = np.stack([df['L_Knee_25_x'], df['L_Knee_25_y']], axis=1)
+    R_knee_points = np.stack([df['R_Knee_26_x'], df['R_Knee_26_y']], axis=1)
+
+    def pca_path_analysis(points):
+        mean_centered = points - np.mean(points, axis=0)
+        cov_inv = np.linalg.pinv(np.cov(mean_centered.T))
+        dists = np.sqrt(np.sum((mean_centered @ cov_inv) * mean_centered, axis=1))
+        inliers = dists <= np.sqrt(5.99)
+        clean = points[inliers]
+        path_len = np.sum(np.linalg.norm(np.diff(clean, axis=0), axis=1))
+        coeff, _, _ = do_pca(clean)
+        angle = np.degrees(np.arctan2(coeff[1,0], coeff[0,0]))
+        return path_len, angle, coeff
+
+    path_L, angle_L, coeff_L = pca_path_analysis(L_knee_points)
+    path_R, angle_R, coeff_R = pca_path_analysis(R_knee_points)
+
+    if np.sign(coeff_L[0,0]) != np.sign(coeff_R[0,0]):
+        coeff_R[:,0] = -coeff_R[:,0]
+        angle_R = np.degrees(np.arctan2(coeff_R[1,0], coeff_R[0,0]))
+
+    angle_diff = abs(abs(angle_L) - abs(angle_R))
+    if angle_diff > 90:
+        angle_diff = 180 - angle_diff
+
+    result += f"【膝關節】路徑長度：左:{path_L:.2f} 右:{path_R:.2f} 差異:{abs(path_L - path_R):.2f}\n"
+    result += f"【膝關節】主軸角度：左:{angle_L:.2f}° 右:{angle_R:.2f}° 差異:{angle_diff:.2f}°\n\n"
+
+    return result
