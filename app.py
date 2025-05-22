@@ -118,10 +118,21 @@ def handle_video(event):
         reply_text = result.stdout[-5000:] if result.returncode == 0 else f"分析失敗：{result.stderr}"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
 
+         # 分析完成後重置使用者狀態
+        user_choices.pop(user_id, None)
+        user_states.pop(user_id, None)
+        user_uploaded_side.pop(user_id, None) 
+
     elif choice == "side":
         base_dir = os.path.dirname(video_path)
         reply_text = side_video_handler.handle_side_video(video_path, base_dir)
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+
+        # 只有分析完成才重置使用者狀態
+        if reply_text.startswith("分析結果："):
+            user_choices.pop(user_id, None)
+            user_states.pop(user_id, None)
+            user_uploaded_side.pop(user_id, None)
     else:
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="⚠️請先選擇影片角度"))
 

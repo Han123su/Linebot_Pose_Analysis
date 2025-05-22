@@ -13,6 +13,8 @@ from typing import Tuple, Optional, List, Dict, Any
 mp_drawing = mp.solutions.drawing_utils
 mp_holistic = mp.solutions.holistic
 
+STANDARD_LENGTH = 280  # 統一縮放基準
+
 def calc_angle(a, b, c):
     """
     考慮 x,y,z 座標計算角度
@@ -60,6 +62,20 @@ def calc_angle_2d(a, b, c):
         return np.degrees(angle)
             
     return None
+
+def compute_scale_distance(landmarks, direction, image_width, image_height):
+    def get_coords(idx):
+        lm = landmarks[idx]
+        return np.array([lm.x * image_width, lm.y * image_height])
+    
+    if direction == '左':
+        shoulder = get_coords(11)
+        hip = get_coords(23)
+    else:
+        shoulder = get_coords(12)
+        hip = get_coords(24)
+    
+    return np.linalg.norm(shoulder - hip)
 
 def determine_video_direction(pose_landmarks_list):
     """
@@ -115,8 +131,11 @@ def get_column_names(direction):
             'L_Hip_23_x', 'L_Hip_23_y', 'L_Hip_23_z', 
             'L_Knee_25_x', 'L_Knee_25_y', 'L_Knee_25_z', 
             'L_Ankle_27_x', 'L_Ankle_27_y', 'L_Ankle_27_z', 
-            'Angle_23_25_27',
-            'Angle_11_23_25'
+            'L_Heel_29_x', 'L_Heel_29_y', 'L_Heel_29_z',
+            'L_Foot_31_x', 'L_Foot_31_y', 'L_Foot_31_z',
+            'Angle_23_25_27', 'Angle_11_23_25',
+            'Angle_25_27_31', 'Angle_27_29_31', 'Angle_25_29_31',
+            'Angle_23_29_31', 'Angle_23_27_31'
         ]
     elif direction == '右':
         return [
@@ -124,47 +143,46 @@ def get_column_names(direction):
             'R_Hip_24_x', 'R_Hip_24_y', 'R_Hip_24_z', 
             'R_Knee_26_x', 'R_Knee_26_y', 'R_Knee_26_z', 
             'R_Ankle_28_x', 'R_Ankle_28_y', 'R_Ankle_28_z', 
-            'Angle_24_26_28',
-            'Angle_12_24_26'
+            'R_Heel_30_x', 'R_Heel_30_y', 'R_Heel_30_z',
+            'R_Foot_32_x', 'R_Foot_32_y', 'R_Foot_32_z',
+            'Angle_24_26_28', 'Angle_12_24_26',
+            'Angle_26_28_32', 'Angle_28_30_32', 'Angle_26_30_32',
+            'Angle_24_30_32', 'Angle_24_28_32'
         ]
     else:
         raise ValueError("未知方向")
 
-def process_frame_data(landmarks, direction, image_width, image_height, frame_number):
-    """
-    根據方向處理單幀的關節點資料
-    """
+def process_frame_data_scaled(landmarks, direction, image_width, image_height, scale_factor):
+    def get_coords(idx):
+        lm = landmarks[idx]
+        return [lm.x * image_width / scale_factor, lm.y * image_height / scale_factor, lm.z]
+
     if direction == '左':
-        shoulder = landmarks[11]  # 左肩關節
-        hip = landmarks[23]      # 左髖關節
-        knee = landmarks[25]     # 左膝關節
-        ankle = landmarks[27]    # 左踝關節
-    else:  # 右
-        shoulder = landmarks[12]  # 右肩關節
-        hip = landmarks[24]      # 右髖關節
-        knee = landmarks[26]     # 右膝關節
-        ankle = landmarks[28]    # 右踝關節
+        shoulder = get_coords(11)
+        hip = get_coords(23)
+        knee = get_coords(25)
+        ankle = get_coords(27)
+        heel = get_coords(29)
+        foot = get_coords(31)
+    else:
+        shoulder = get_coords(12)
+        hip = get_coords(24)
+        knee = get_coords(26)
+        ankle = get_coords(28)
+        heel = get_coords(30)
+        foot = get_coords(32)
 
-    # 轉換座標點
-    shoulder_coords = [shoulder.x * image_width, shoulder.y * image_height, shoulder.z]
-    hip_coords = [hip.x * image_width, hip.y * image_height, hip.z]
-    knee_coords = [knee.x * image_width, knee.y * image_height, knee.z]
-    ankle_coords = [ankle.x * image_width, ankle.y * image_height, ankle.z]
-
-    # 計算髖-膝-踝角度
-    leg_angle = calc_angle_2d(hip_coords, knee_coords, ankle_coords)
-    # 計算肩-髖-膝角度
-    upper_angle = calc_angle_2d(shoulder_coords, hip_coords, knee_coords)
-
-    # 返回該幀的資料
-    return [
-        shoulder_coords[0], shoulder_coords[1], shoulder_coords[2],
-        hip_coords[0], hip_coords[1], hip_coords[2],
-        knee_coords[0], knee_coords[1], knee_coords[2],
-        ankle_coords[0], ankle_coords[1], ankle_coords[2],
-        leg_angle,
-        upper_angle
+    angles = [
+        calc_angle_2d(hip, knee, ankle),
+        calc_angle_2d(shoulder, hip, knee),
+        calc_angle_2d(knee, ankle, foot),
+        calc_angle_2d(ankle, heel, foot),
+        calc_angle_2d(knee, heel, foot),
+        calc_angle_2d(hip, heel, foot),
+        calc_angle_2d(hip, ankle, foot)
     ]
+
+    return shoulder + hip + knee + ankle + heel + foot + angles
 
 def draw_skeleton(frame, results, direction):
     """
@@ -323,6 +341,20 @@ def process_video(video_path: str, base_path: str, video_direction: str) -> List
     image_height, image_width = first_frame.shape[:2]
     print(f"frame size: ({image_width}, {image_height})")
 
+    # 計算中位數肩髖距離與縮放因子
+    distances = []
+    with mp_holistic.Holistic() as holistic:
+        for path in tqdm(frame_list[:70]):
+            frame = cv2.imread(path)
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = holistic.process(frame_rgb)
+            if results.pose_landmarks:
+                d = compute_scale_distance(results.pose_landmarks.landmark, video_direction, image_width, image_height)
+                distances.append(d)
+
+    median_dist = np.median(distances)
+    scale_factor = median_dist / STANDARD_LENGTH
+
     # 處理所有幀
     processed_data = []
     
@@ -335,12 +367,12 @@ def process_video(video_path: str, base_path: str, video_direction: str) -> List
 
             if results.pose_landmarks:
                 try:
-                    frame_data = process_frame_data(
+                    frame_data = process_frame_data_scaled(
                         results.pose_landmarks.landmark,
                         video_direction,
                         image_width,
                         image_height,
-                        idx
+                        scale_factor
                     )
                     processed_data.append(frame_data)
                 except Exception as e:
