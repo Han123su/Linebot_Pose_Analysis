@@ -418,7 +418,7 @@ def approximate_entropy(U, m=2, r=None):
 
     return abs(_phi(m) - _phi(m + 1))
 
-def analyze_entropy_and_delay(left_signal, right_signal, fs=30):
+def analyze_entropy(left_signal, right_signal):
     left = (left_signal - np.mean(left_signal)) / np.std(left_signal)
     right = (right_signal - np.mean(right_signal)) / np.std(right_signal)
 
@@ -426,21 +426,10 @@ def analyze_entropy_and_delay(left_signal, right_signal, fs=30):
     apen_left = approximate_entropy(left)
     apen_right = approximate_entropy(right)
 
-    # Cross-correlation
-    max_lag = len(left) // 2
-    corr = correlate(left, right, mode='full') / (np.linalg.norm(left) * np.linalg.norm(right))
-    lags = np.arange(-len(left) + 1, len(left))
-    max_idx = np.argmax(np.abs(corr))
-    time_delay = lags[max_idx] / fs
-
     return {
         'approx_entropy': {
             'left': apen_left,
             'right': apen_right
-        },
-        'cross_correlation': {
-            'max_corr': corr[max_idx],
-            'time_delay': time_delay
         }
     }
 
