@@ -24,6 +24,8 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     R_knee_angle = df["Angle_24_26_28"].to_numpy()
     L_hip_angle = df["Angle_11_23_25"].to_numpy()
     R_hip_angle = df["Angle_12_24_26"].to_numpy()
+    L_ankle_angle = df["Angle_23_27_31"].to_numpy()
+    R_ankle_angle = df["Angle_24_28_32"].to_numpy()
     
     # 小波分解和重建
     wavelet_function = 'coif3'
@@ -34,12 +36,16 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     R_knee_wavelet, _ = wavelet_process(R_knee_angle, wavelet_function, level, fs)
     L_hip_wavelet, _ = wavelet_process(L_hip_angle, wavelet_function, level, fs)
     R_hip_wavelet, _ = wavelet_process(R_hip_angle, wavelet_function, level, fs)
-    
+    L_ankle_wavelet, _ = wavelet_process(L_ankle_angle, wavelet_function, level, fs)
+    R_ankle_wavelet, _ = wavelet_process(R_ankle_angle, wavelet_function, level, fs)
+
     # 自適應頻率分析
     freq_L_knee, amp_L_knee = perform_fft(L_knee_wavelet, fs)
     freq_R_knee, amp_R_knee = perform_fft(R_knee_wavelet, fs)
     freq_L_hip, amp_L_hip = perform_fft(L_hip_wavelet, fs)
     freq_R_hip, amp_R_hip = perform_fft(R_hip_wavelet, fs)
+    freq_L_ankle, amp_L_ankle = perform_fft(L_ankle_wavelet, fs)
+    freq_R_ankle, amp_R_ankle = perform_fft(R_ankle_wavelet, fs)
     
     # 設定最小有效頻率（排除直流分量和極低頻）
     min_valid_freq = 0.2  # Hz
@@ -49,7 +55,9 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     top_freq_R_knee = get_top_frequencies(freq_R_knee, amp_R_knee, min_valid_freq)
     top_freq_L_hip = get_top_frequencies(freq_L_hip, amp_L_hip, min_valid_freq)
     top_freq_R_hip = get_top_frequencies(freq_R_hip, amp_R_hip, min_valid_freq)
-    
+    top_freq_L_ankle = get_top_frequencies(freq_L_ankle, amp_L_ankle, min_valid_freq)
+    top_freq_R_ankle = get_top_frequencies(freq_R_ankle, amp_R_ankle, min_valid_freq)
+
     # 計算步行頻率
     knee_gait_freq = 1.0  # 預設值
     if len(top_freq_L_knee) > 0 and len(top_freq_R_knee) > 0:
@@ -58,6 +66,10 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     hip_gait_freq = 1.0  # 預設值
     if len(top_freq_L_hip) > 0 and len(top_freq_R_hip) > 0:
         hip_gait_freq = np.mean([top_freq_L_hip[0], top_freq_R_hip[0]])
+
+    ankle_gait_freq = 1.0    # 預設值
+    if len(top_freq_L_ankle) > 0 and len(top_freq_R_ankle) > 0:
+        ankle_gait_freq = np.mean([top_freq_L_ankle[0], top_freq_R_ankle[0]]) 
     
     # 使用膝關節和髖關節頻率的平均值作為整體步行頻率
     gait_freq = np.mean([knee_gait_freq, hip_gait_freq])
@@ -73,12 +85,16 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     R_knee_denoised = filtfilt(b, a, R_knee_wavelet.flatten())
     L_hip_denoised = filtfilt(b, a, L_hip_wavelet.flatten())
     R_hip_denoised = filtfilt(b, a, R_hip_wavelet.flatten())
+    L_ankle_denoised = filtfilt(b, a, L_ankle_wavelet.flatten())
+    R_ankle_denoised = filtfilt(b, a, R_ankle_wavelet.flatten())
     
     # 最終處理後的信號
     L_knee_aligned = L_knee_denoised
     R_knee_aligned = R_knee_denoised
     L_hip_aligned = L_hip_denoised
     R_hip_aligned = R_hip_denoised
+    L_ankle_aligned = L_ankle_denoised
+    R_ankle_aligned = R_ankle_denoised
     
     # 膝關節峰值檢測
     min_peak_height_knee = np.mean(L_knee_aligned)  # 用平均值作為最小峰值高度
@@ -142,6 +158,39 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     
     L_hip_acc_magnitude = np.mean(np.abs(L_hip_acceleration))
     R_hip_acc_magnitude = np.mean(np.abs(R_hip_acceleration))
+
+    # 踝關節相關
+    min_peak_height_ankle = np.mean([np.mean(L_ankle_aligned), np.mean(R_ankle_aligned)]) * 0.9
+    locs_L_ankle = find_peaks(L_ankle_aligned, height=min_peak_height_ankle, distance=min_peak_distance)[0]
+    locs_R_ankle = find_peaks(R_ankle_aligned, height=min_peak_height_ankle, distance=min_peak_distance)[0]
+
+    L_ankle_period = np.mean(np.diff(locs_L_ankle)) if len(locs_L_ankle) > 1 else np.nan
+    R_ankle_period = np.mean(np.diff(locs_R_ankle)) if len(locs_R_ankle) > 1 else np.nan
+
+    # 多週期踝關節角度範圍分析
+    def cycle_range_analysis(signal, locs):
+        ranges = []
+        if len(locs) > 1:
+            for i in range(len(locs)-1):
+                seg = signal[locs[i]:locs[i+1]]
+                ranges.append(np.max(seg) - np.min(seg))
+        return np.mean(ranges) if ranges else np.nan, np.std(ranges) if ranges else np.nan
+
+    L_ankle_mean_cycle_range, L_ankle_std_cycle_range = cycle_range_analysis(L_ankle_aligned, locs_L_ankle)
+    R_ankle_mean_cycle_range, R_ankle_std_cycle_range = cycle_range_analysis(R_ankle_aligned, locs_R_ankle)
+
+    ankle_mean_cycle_range_diff = abs(L_ankle_mean_cycle_range - R_ankle_mean_cycle_range) if not np.isnan(L_ankle_mean_cycle_range) and not np.isnan(R_ankle_mean_cycle_range) else np.nan
+
+    # 速度與加速度
+    L_ankle_velocity = np.gradient(L_ankle_aligned)
+    R_ankle_velocity = np.gradient(R_ankle_aligned)
+    L_ankle_acceleration = np.gradient(L_ankle_velocity)
+    R_ankle_acceleration = np.gradient(R_ankle_velocity)
+
+    L_ankle_vel_magnitude = np.mean(np.abs(L_ankle_velocity))
+    R_ankle_vel_magnitude = np.mean(np.abs(R_ankle_velocity))
+    L_ankle_acc_magnitude = np.mean(np.abs(L_ankle_acceleration))
+    R_ankle_acc_magnitude = np.mean(np.abs(R_ankle_acceleration))
     
     # 多周期角度範圍分析
     # 膝關節多周期範圍分析
@@ -224,11 +273,20 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
         hip_interval_diff = abs(L_hip_period - R_hip_period) / L_hip_period
         hip_waveform_sim = 1 - ((hip_amplitude_diff + hip_interval_diff) / 2)
     
+    if not np.isnan(L_ankle_period) and not np.isnan(R_ankle_period) and not np.isnan(L_ankle_mean_cycle_range) and not np.isnan(R_ankle_mean_cycle_range):
+        amp_diff = abs(L_ankle_mean_cycle_range - R_ankle_mean_cycle_range) / L_ankle_mean_cycle_range
+        intv_diff = abs(L_ankle_period - R_ankle_period) / L_ankle_period
+        ankle_waveform_sim = 1 - (amp_diff * 0.6 + intv_diff * 0.4)
+    else:
+        ankle_waveform_sim = np.nan
+
     # 熵值分析
     L_knee_entropy = approximate_entropy(L_knee_aligned)
     R_knee_entropy = approximate_entropy(R_knee_aligned)
     L_hip_entropy = approximate_entropy(L_hip_aligned)
     R_hip_entropy = approximate_entropy(R_hip_aligned)
+    L_ankle_entropy = approximate_entropy(L_ankle_aligned)
+    R_ankle_entropy = approximate_entropy(R_ankle_aligned)
     
     if not np.isnan(average_knee_period):
         result = f"平均步態週期: {average_knee_period:.2f} frames\n\n"
@@ -244,6 +302,10 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     result += f"髖角速度標準差 - 左:{np.std(L_hip_velocity):.2f} 右:{np.std(R_hip_velocity):.2f}\n"
     result += f"髖加速度標準差 - 左:{np.std(L_hip_acceleration):.2f} 右:{np.std(R_hip_acceleration):.2f}\n"
     result += f"髖平均角速度大小 - 左:{L_hip_vel_magnitude:.2f} 右:{R_hip_vel_magnitude:.2f}\n\n"
+    
+    result += f"踝角速度標準差 - 左:{np.std(L_ankle_velocity):.2f} 右:{np.std(R_ankle_velocity):.2f}\n"
+    result += f"踝加速度標準差 - 左:{np.std(L_ankle_acceleration):.2f} 右:{np.std(R_ankle_acceleration):.2f}\n"
+    result += f"踝平均角速度大小 - 左:{L_ankle_vel_magnitude:.2f} 右:{R_ankle_vel_magnitude:.2f}\n\n"
     
     # 多周期關節角度範圍分析
     result += "==== 週期角度範圍分析 ====\n"
@@ -278,8 +340,21 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
         hip_mean_cycle_range_diff = abs(L_hip_mean_cycle_range - R_hip_mean_cycle_range)
         result += f"髖左右平均範圍差異: {hip_mean_cycle_range_diff:.2f}\n\n"
     else:
-        result += "無法計算髖關節左右平均週期範圍差異\n\n"
+        result += "無法計算髖關節左右平均週期範圍差異\n"
     
+    if not np.isnan(L_ankle_mean_cycle_range):
+        result += f"左踝平均週期範圍: {L_ankle_mean_cycle_range:.2f} ± {L_ankle_std_cycle_range:.2f}\n"
+    else:
+        result += "左踝未檢測到足夠的週期點\n"
+    if not np.isnan(R_ankle_mean_cycle_range):
+        result += f"右踝平均週期範圍: {R_ankle_mean_cycle_range:.2f} ± {R_ankle_std_cycle_range:.2f}\n"
+    else:
+        result += "右踝未檢測到足夠的週期點\n"
+    if not np.isnan(ankle_mean_cycle_range_diff):
+        result += f"踝左右平均範圍差異: {ankle_mean_cycle_range_diff:.2f}\n\n"
+    else:
+        result += "無法計算踝關節左右平均週期範圍差異\n\n"
+
     # 熵值分析
     result += "===== 熵值分析 =====\n"
     result += f"膝近似熵 - 左:{L_knee_entropy:.4f} 右:{R_knee_entropy:.4f}\n"
@@ -288,14 +363,11 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     
     result += f"髖近似熵 - 左:{L_hip_entropy:.4f} 右:{R_hip_entropy:.4f}\n"
     stable_hip = "左較穩定" if L_hip_entropy < R_hip_entropy else "右較穩定"
-    result += f"髖近似熵差異 - {abs(L_hip_entropy - R_hip_entropy):.4f} ({stable_hip})\n\n"
-    
-    # 波形差異分析
-    result += "===== 波形差異分析 =====\n"
-    knee_std_ratio = np.std(L_knee_aligned) / np.std(R_knee_aligned)
-    hip_std_ratio = np.std(L_hip_aligned) / np.std(R_hip_aligned)
-    result += f"膝角度變異對稱指數: {knee_std_ratio:.4f}\n"
-    result += f"髖角度變異對稱指數: {hip_std_ratio:.4f}\n\n"
+    result += f"髖近似熵差異 - {abs(L_hip_entropy - R_hip_entropy):.4f} ({stable_hip})\n"
+
+    result += f"踝近似熵 - 左:{L_ankle_entropy:.4f} 右:{R_ankle_entropy:.4f}\n"
+    stable_ankle = "左較穩定" if L_ankle_entropy < R_ankle_entropy else "右較穩定"
+    result += f"踝近似熵差異 - {abs(L_ankle_entropy - R_ankle_entropy):.4f} ({stable_ankle})\n\n"
     
     # 波形參數比較分析
     result += "===== 波形參數比較分析 =====\n"
@@ -309,6 +381,11 @@ def analyze_side_gait(xlsx_path, output_folder=None, fs=30):
     else:
         result += "髖關節檢測不到足夠的波峰來分析波形參數\n"
     
+    if not np.isnan(ankle_waveform_sim):
+        result += f"踝關節波形參數相似度: {ankle_waveform_sim:.4f}\n"
+    else:
+        result += "踝關節檢測不到足夠的波峰來分析波形參數\n"
+
     return result
 
 def wrcoef_custom(coeffs, level, wavelet, part='a'):
